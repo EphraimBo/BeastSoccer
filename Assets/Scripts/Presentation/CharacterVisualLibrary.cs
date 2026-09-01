@@ -32,6 +32,20 @@ namespace BeastSoccer.Presentation
                 driver.ConfigureDirectionalPrototype(type, controller);
                 driver.RefreshParameters();
             }
+            // FIX32: Volt gets a scene-safe runtime sprite override for FLY/BLOCK art.
+            // Other characters never receive this component, keeping their animation wiring isolated.
+            if (type == CharacterType.Volt)
+            {
+                var ultArt = GetComponent<VoltUltSpriteOverride>();
+                if (ultArt == null) ultArt = gameObject.AddComponent<VoltUltSpriteOverride>();
+                ultArt.visual = GetComponent<PlayerVisualProxy>();
+                ultArt.targetRenderer = renderer;
+            }
+            else
+            {
+                var staleUltArt = GetComponent<VoltUltSpriteOverride>();
+                if (staleUltArt != null) Object.Destroy(staleUltArt);
+            }
             if(placeholderToDisable!=null&&(controller!=null||idle!=null))placeholderToDisable.SetActive(false);
         }
     }

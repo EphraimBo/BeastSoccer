@@ -383,7 +383,7 @@ namespace BeastSoccer.Player
             sprintBlend = Mathf.MoveTowards(sprintBlend, targetSprint, ramp);
 
             float ultSpeed = Ult != null ? Ult.SpeedMultiplier : 1f;
-            float wingSpeed = IsWingBlocking ? cfg.voltWingWalkSpeed / Mathf.Max(0.01f, cfg.baseMoveSpeed) : 1f;
+            float wingSpeed = 1f; // FIX32 BLOCK keeps Volt on normal ground movement speed.
             float speed = cfg.baseMoveSpeed * cfg.gameplayPaceMultiplier * baseSpeed * ultSpeed * externalSpeedMultiplier * wingSpeed;
             speed *= Mathf.Lerp(1f, cfg.sprintMultiplier, sprintBlend);
 
@@ -463,7 +463,7 @@ namespace BeastSoccer.Player
         {
             if (GameConfig.Instance == null || rb == null || IsFlying) return;
             float ultSpeed = Ult != null ? Mathf.Max(1f, Ult.SpeedMultiplier) : 1f;
-            float wingSpeed = IsWingBlocking ? GameConfig.Instance.voltWingWalkSpeed / Mathf.Max(0.01f, GameConfig.Instance.baseMoveSpeed) : 1f;
+            float wingSpeed = 1f; // FIX32 BLOCK keeps Volt on normal ground movement speed.
             float maxLegal = GameConfig.Instance.baseMoveSpeed * GameConfig.Instance.gameplayPaceMultiplier * baseSpeed * GameConfig.Instance.sprintMultiplier * ultSpeed * Mathf.Max(1f, externalSpeedMultiplier) * wingSpeed;
             maxLegal *= GameConfig.Instance.hardSpeedCapMultiplier;
             // Explicit, bounded shove effects (Goro bulldoze / keeper exclusion) may briefly move

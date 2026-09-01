@@ -26,8 +26,20 @@ namespace BeastSoccer.Ball
         private System.Collections.IEnumerator Resolve(BallControl ball)
         {
             busy = true;
-            // Give GoalTrigger one physics step to win if this was actually a goal.
+            // FIX31: a ball entering the goal-line boundary inside the mouth may only be
+            // PARTIALLY over the line. One physics frame was too short and could incorrectly
+            // award a goal kick before GoalTrigger had time to see the whole ball cross.
             yield return new WaitForFixedUpdate();
+            if (kind == BoundaryKind.GoalLine && ball != null && GameConfig.Instance != null)
+            {
+                float mouth = Mathf.Max(0.2f, GameConfig.Instance.shotGoalHalfWidth);
+                if (Mathf.Abs(ball.transform.position.y) <= mouth + 0.25f)
+                {
+                    float until = Time.time + 0.18f;
+                    while (Time.time < until && ball != null && GameManager.Instance != null && GameManager.Instance.Phase == MatchPhase.Playing)
+                        yield return new WaitForFixedUpdate();
+                }
+            }
             if (ball == null || GameManager.Instance == null || GameManager.Instance.Phase != MatchPhase.Playing)
             {
                 busy = false;

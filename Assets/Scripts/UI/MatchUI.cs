@@ -19,6 +19,8 @@ namespace BeastSoccer.UI
         public Text ultDebugText, ultGoalText;
         public float sprintStaminaMaxWidth = 230f;
         private bool wasUltActive;
+        private int bannerBaseFontSize;
+        private Color bannerBaseColor = Color.white;
         private float ultFlashAlpha;
         private float ultGoalUntil;
 
@@ -36,6 +38,11 @@ namespace BeastSoccer.UI
             Bind();
             UpdateScore(ScoreManager.Instance != null ? ScoreManager.Instance.HomeScore : 0,
                         ScoreManager.Instance != null ? ScoreManager.Instance.AwayScore : 0);
+            if (bannerText != null)
+            {
+                bannerBaseFontSize = bannerText.fontSize;
+                bannerBaseColor = bannerText.color;
+            }
             if (GameManager.Instance != null) Phase(GameManager.Instance.Phase);
             RefreshActionContext(true);
         }
@@ -277,10 +284,24 @@ namespace BeastSoccer.UI
             bool attackingUlt = ult.IsActive && !ult.IsActivating && ult.IsAttackingVariant;
             if (human.Character == CharacterType.Volt)
             {
-                if (flyLabel != null) flyLabel.text = ult.IsFlying ? "FLYING" : "FLY";
-                if (ult.IsFlying) SetButtonColor(flyButton, new Color(.95f,.82f,.18f,.95f));
-                else if (attackingUlt) SetButtonColor(flyButton, new Color(.18f,.78f,.95f,.95f));
-                else SetButtonColor(flyButton, new Color(.18f,.32f,.40f,.62f));
+                // FIX32: the same special-action button changes with possession. In attack it is FLY;
+                // without possession it becomes BLOCK and expands Volt's wings into a defensive wall.
+                bool teamHasBall = ult.TeamHasPossession();
+                if (teamHasBall)
+                {
+                    if (flyLabel != null) flyLabel.text = ult.IsFlying ? "FLYING" : "FLY";
+                    if (ult.IsFlying) SetButtonColor(flyButton, new Color(.95f,.82f,.18f,.95f));
+                    else if (ult.IsActive && !ult.IsActivating) SetButtonColor(flyButton, new Color(.18f,.78f,.95f,.95f));
+                    else SetButtonColor(flyButton, new Color(.18f,.32f,.40f,.62f));
+                }
+                else
+                {
+                    if (flyLabel != null) flyLabel.text = ult.IsWingBlockActive ? "BLOCKING" : "BLOCK";
+                    if (ult.IsWingBlockActive) SetButtonColor(flyButton, new Color(1f,.78f,.18f,.98f));
+                    else if (ult.IsActive && !ult.IsActivating) SetButtonColor(flyButton, new Color(.88f,.56f,.12f,.95f));
+                    else SetButtonColor(flyButton, new Color(.38f,.31f,.18f,.62f));
+                }
+                flyButton.interactable = ult.CanTriggerSpecialAction;
             }
             else
             {
@@ -288,8 +309,8 @@ namespace BeastSoccer.UI
                 if (ult.IsCharging) SetButtonColor(flyButton, new Color(1f,.62f,.12f,.98f));
                 else if (attackingUlt) SetButtonColor(flyButton, new Color(.92f,.32f,.10f,.95f));
                 else SetButtonColor(flyButton, new Color(.42f,.22f,.16f,.62f));
+                flyButton.interactable = attackingUlt && ult.CanTriggerSpecialAction;
             }
-            flyButton.interactable = attackingUlt && ult.CanTriggerSpecialAction;
         }
 
         private void RefreshLob()
@@ -393,16 +414,34 @@ namespace BeastSoccer.UI
         private void Phase(MatchPhase phase)
         {
             if (bannerText == null) return;
+            if (bannerBaseFontSize <= 0) bannerBaseFontSize = bannerText.fontSize;
+            bannerText.fontSize = bannerBaseFontSize;
+            bannerText.color = bannerBaseColor;
+
             switch (phase)
             {
-                case MatchPhase.GoalScored: bannerText.text = "GOAL!"; break;
-                case MatchPhase.StopMade: bannerText.text = "SAVE!"; break;
-                case MatchPhase.Kickoff: bannerText.text = MatchTimer.Instance != null && MatchTimer.Instance.InGoldenGoal ? "GOLDEN GOAL" : "KICK OFF"; break;
+                case MatchPhase.GoalScored:
+                    bannerText.text = "GOAL!";
+                    bannerText.fontSize = Mathf.Max(bannerBaseFontSize, 58);
+                    bannerText.color = new Color(1f, .82f, .18f, 1f);
+                    break;
+                case MatchPhase.StopMade:
+                    bannerText.text = "SAVE!";
+                    bannerText.color = new Color(.45f, .85f, 1f, 1f);
+                    break;
+                case MatchPhase.Kickoff:
+                    bannerText.text = MatchTimer.Instance != null && MatchTimer.Instance.InGoldenGoal ? "GOLDEN GOAL" : "KICK OFF";
+                    break;
                 case MatchPhase.SetPiece:
-                    bannerText.text = GameManager.Instance != null && GameManager.Instance.CurrentSetPieceType == SetPieceType.ThrowIn ? "THROW IN"
-                        : GameManager.Instance != null && GameManager.Instance.CurrentSetPieceType == SetPieceType.GoalKick ? "GOAL KICK"
-                        : GameManager.Instance != null && GameManager.Instance.CurrentSetPieceType == SetPieceType.Corner ? "CORNER"
-                        : "OUT OF PLAY";
+                    if (GameManager.Instance != null && GameManager.Instance.CurrentSetPieceType == SetPieceType.GoalKick)
+                    {
+                        bannerText.text = "GOAL KICK";
+                        bannerText.color = new Color(.55f, .82f, 1f, 1f);
+                        bannerText.fontSize = Mathf.Max(bannerBaseFontSize, 38);
+                    }
+                    else if (GameManager.Instance != null && GameManager.Instance.CurrentSetPieceType == SetPieceType.ThrowIn) bannerText.text = "THROW IN";
+                    else if (GameManager.Instance != null && GameManager.Instance.CurrentSetPieceType == SetPieceType.Corner) bannerText.text = "CORNER";
+                    else bannerText.text = "OUT OF PLAY";
                     break;
                 case MatchPhase.HalfTime: bannerText.text = "HALF TIME"; break;
                 case MatchPhase.MatchOver: bannerText.text = "FULL TIME"; break;

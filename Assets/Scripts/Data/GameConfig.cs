@@ -26,12 +26,12 @@ namespace BeastSoccer.Data
         public float pitchLength = 24f;
         public float pitchWidth = 15.86f;
         public float cameraAngle = 50f;
-        public float cameraVisibleFraction = 0.95f;
+        public float cameraVisibleFraction = 0.92f;
         public float finalStretchCameraTighten = 0.93f;
         public float cameraFollowLerp = 4.0f;
         public bool enableHaptics = true;
         public float cameraLookAhead = 1.15f;
-        public float cameraOutsideViewMargin = 5.5f;
+        public float cameraOutsideViewMargin = 4.0f;
         public float cameraBallVelocityLookAheadSeconds = 0.10f;
         public float cameraBallVelocityLookAheadMax = 1.20f;
         public float ballVisualRadius = 0.18f;
@@ -311,6 +311,7 @@ namespace BeastSoccer.Data
         public float voltFlyVisualBob = 0.025f;
         public float voltWingWidthFraction = 0.28f;
         public float voltWingWalkSpeed = 0.62f;
+        public float voltBlockSeconds = 3.0f;
 
         private void Awake()
         {
@@ -319,9 +320,10 @@ namespace BeastSoccer.Data
 
             // FIX24 migration: update only known older defaults so an existing generated Match
             // scene can be tested without rebuilding (and without deleting manually added art).
-            if (cameraVisibleFraction < 0.94f) cameraVisibleFraction = 0.95f;
+            // FIX32 camera settles between the old close framing and FIX27's very wide framing.
+            if (cameraVisibleFraction >= 0.94f || cameraVisibleFraction < 0.87f) cameraVisibleFraction = 0.92f;
             if (Mathf.Approximately(cameraLookAhead, 1.0f)) cameraLookAhead = 1.15f;
-            if (cameraOutsideViewMargin < 5.49f) cameraOutsideViewMargin = 5.5f;
+            if (cameraOutsideViewMargin >= 5.49f || cameraOutsideViewMargin < 2.3f) cameraOutsideViewMargin = 4.0f;
             if (Mathf.Approximately(dribbleTouchAmplitude, 0.035f) || Mathf.Approximately(dribbleTouchAmplitude, 0.055f)) dribbleTouchAmplitude = 0.070f;
             if (Mathf.Approximately(sprintDribbleTouchAmplitude, 0.055f) || Mathf.Approximately(sprintDribbleTouchAmplitude, 0.075f)) sprintDribbleTouchAmplitude = 0.092f;
             if (Mathf.Approximately(lobArrivalSpeed, 3.8f)) lobArrivalSpeed = 4.35f;

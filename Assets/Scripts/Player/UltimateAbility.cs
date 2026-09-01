@@ -23,9 +23,10 @@ namespace BeastSoccer.Player
         public float TackleMultiplier { get; private set; } = 1f;
         public float ActiveSecondsRemaining { get; private set; }
         public float ActiveFractionRemaining => IsActivating ? 1f : (IsActive && GameConfig.Instance != null ? Mathf.Clamp01(ActiveSecondsRemaining / Mathf.Max(0.01f, GameConfig.Instance.ultDurationSeconds)) : 0f);
-        public bool CanTriggerVoltFlight => player != null && player.Character == CharacterType.Volt && player.IsHuman && IsActive && !IsActivating && IsAttackingVariant && !IsFlying && GameManager.Instance != null && GameManager.Instance.Phase == MatchPhase.Playing;
+        public bool CanTriggerVoltFlight => player != null && player.Character == CharacterType.Volt && player.IsHuman && IsActive && !IsActivating && TeamHasPossession() && !IsFlying && !IsWingBlockActive && GameManager.Instance != null && GameManager.Instance.Phase == MatchPhase.Playing;
+        public bool CanTriggerVoltBlock => player != null && player.Character == CharacterType.Volt && player.IsHuman && IsActive && !IsActivating && !TeamHasPossession() && !IsFlying && !IsWingBlockActive && GameManager.Instance != null && GameManager.Instance.Phase == MatchPhase.Playing;
         public bool CanTriggerGoroCharge => player != null && player.Character == CharacterType.Goro && player.IsHuman && IsActive && !IsActivating && IsAttackingVariant && !IsCharging && GameManager.Instance != null && GameManager.Instance.Phase == MatchPhase.Playing;
-        public bool CanTriggerSpecialAction => CanTriggerVoltFlight || CanTriggerGoroCharge;
+        public bool CanTriggerSpecialAction => CanTriggerVoltFlight || CanTriggerVoltBlock || CanTriggerGoroCharge;
         public bool VoltFlightUsed => false; // flights are reusable while the ult timer remains active
 
         public BoxCollider2D wingBlockCollider;
@@ -33,6 +34,7 @@ namespace BeastSoccer.Player
 
         private PlayerController player;
         private Coroutine activeRoutine;
+        private Coroutine voltBlockRoutine;
         private Vector3 baseVisualScale = Vector3.one;
         private float passiveLockUntil;
         private float preUltTimeScale = 1f;
@@ -53,6 +55,11 @@ namespace BeastSoccer.Player
 
         private void Update()
         {
+            // FIX32: BLOCK is the defensive counterpart to FLY. If possession comes back to Volt's
+            // team, drop the expanded-wing barrier immediately so the same button can become FLY.
+            if (IsWingBlockActive && (player == null || !IsActive || TeamHasPossession() || GameManager.Instance == null || GameManager.Instance.Phase != MatchPhase.Playing))
+                EndVoltBlock();
+
             if (player == null || player.Character == CharacterType.Generic || GameManager.Instance == null || GameManager.Instance.Phase != MatchPhase.Playing || IsActive || IsActivating || Time.time < passiveLockUntil) return;
             float rechargeMultiplier = 1f;
             if (ScoreManager.Instance != null && GameConfig.Instance != null)
@@ -94,6 +101,14 @@ namespace BeastSoccer.Player
             bool attacking = IsTeamAttackingAtPress();
             activeRoutine = StartCoroutine(UltRoutine(attacking));
             return true;
+        }
+
+        public bool TeamHasPossession()
+        {
+            if (player == null || GameManager.Instance == null) return false;
+            Possession p = GameManager.Instance.Possession;
+            return (player.Side == TeamSide.Home && p == Possession.Home) ||
+                   (player.Side == TeamSide.Away && p == Possession.Away);
         }
 
         private bool IsTeamAttackingAtPress()
@@ -226,12 +241,10 @@ namespace BeastSoccer.Player
                     }
                     else
                     {
-                        IsWingBlockActive=true;
-                        if (wingBlockCollider != null)
-                        {
-                            wingBlockCollider.enabled=true;
-                            wingBlockCollider.size = new Vector2(0.55f, c.pitchWidth*c.voltWingWidthFraction);
-                        }
+                        // FIX32: defensive Volt no longer receives an always-on wall. BLOCK is a
+                        // deliberate special-action press, mirroring the way FLY is triggered in attack.
+                        IsWingBlockActive = false;
+                        if (wingBlockCollider != null) wingBlockCollider.enabled = false;
                     }
                     break;
             }
@@ -248,6 +261,46 @@ namespace BeastSoccer.Player
             return true;
         }
 
+        public bool TryVoltBlock()
+        {
+            if (!CanTriggerVoltBlock || GameConfig.Instance == null) return false;
+            if (voltBlockRoutine != null) StopCoroutine(voltBlockRoutine);
+            voltBlockRoutine = StartCoroutine(VoltBlockRoutine());
+            return true;
+        }
+
+        private IEnumerator VoltBlockRoutine()
+        {
+            IsWingBlockActive = true;
+            if (wingBlockCollider != null)
+            {
+                wingBlockCollider.enabled = true;
+                float width = Mathf.Max(3.4f, GameConfig.Instance.pitchWidth * Mathf.Max(0.28f, GameConfig.Instance.voltWingWidthFraction));
+                wingBlockCollider.size = new Vector2(0.85f, width);
+            }
+            GameFeel.Shake(0.035f);
+
+            float remaining = Mathf.Max(0.5f, GameConfig.Instance.voltBlockSeconds);
+            while (remaining > 0f && IsActive && IsWingBlockActive && !TeamHasPossession() &&
+                   GameManager.Instance != null && GameManager.Instance.Phase == MatchPhase.Playing)
+            {
+                remaining -= Time.deltaTime;
+                yield return null;
+            }
+            EndVoltBlock();
+        }
+
+        private void EndVoltBlock()
+        {
+            IsWingBlockActive = false;
+            if (wingBlockCollider != null) wingBlockCollider.enabled = false;
+            if (voltBlockRoutine != null)
+            {
+                StopCoroutine(voltBlockRoutine);
+                voltBlockRoutine = null;
+            }
+        }
+
         public bool TryGoroCharge()
         {
             if (!CanTriggerGoroCharge || GameConfig.Instance == null) return false;
@@ -261,7 +314,8 @@ namespace BeastSoccer.Player
         public bool TrySpecialAction()
         {
             if (player == null) return false;
-            if (player.Character == CharacterType.Volt) return TryVoltFlight();
+            if (player.Character == CharacterType.Volt)
+                return TeamHasPossession() ? TryVoltFlight() : TryVoltBlock();
             if (player.Character == CharacterType.Goro) return TryGoroCharge();
             return false;
         }
@@ -293,7 +347,7 @@ namespace BeastSoccer.Player
             IsActive=false;
             IsActivating=false;
             IsAttackingVariant=false;
-            IsWingBlockActive=false;
+            EndVoltBlock();
             IsFlying=false;
             IsCharging=false;
             ActiveSecondsRemaining=0f;
