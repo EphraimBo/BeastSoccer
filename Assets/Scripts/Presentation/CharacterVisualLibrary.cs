@@ -27,26 +27,67 @@ namespace BeastSoccer.Presentation
                 renderer.color=type==CharacterType.Generic?(side==TeamSide.Home?new Color(.55f,.72f,1f,1f):new Color(1f,.58f,.58f,1f)):Color.white;
                 renderer.sortingOrder=50; // Sprite presentation stays visually above debug ground indicators.
             }
+            // FIX34A: character-specific presentation scale. This changes only the real sprite renderer,
+            // never the shared player/gameplay root. Leo and Volt remain unchanged; Goro is intentionally larger.
+            if (renderer != null)
+            {
+                renderer.transform.localScale = type == CharacterType.Goro
+                    ? UnityEngine.Vector3.one * 2.4f
+                    : UnityEngine.Vector3.one;
+            }
+
             if (driver != null)
             {
                 driver.ConfigureDirectionalPrototype(type, controller);
                 driver.RefreshParameters();
             }
-            // FIX32: Volt gets a scene-safe runtime sprite override for FLY/BLOCK art.
-            // Other characters never receive this component, keeping their animation wiring isolated.
+            // Runtime sprite overrides keep each character's temporary art isolated.
             if (type == CharacterType.Volt)
             {
-                var ultArt = GetComponent<VoltUltSpriteOverride>();
-                if (ultArt == null) ultArt = gameObject.AddComponent<VoltUltSpriteOverride>();
-                ultArt.visual = GetComponent<PlayerVisualProxy>();
-                ultArt.targetRenderer = renderer;
+                var voltArt = GetComponent<VoltUltSpriteOverride>();
+                if (voltArt == null) voltArt = gameObject.AddComponent<VoltUltSpriteOverride>();
+                voltArt.visual = GetComponent<PlayerVisualProxy>();
+                voltArt.targetRenderer = renderer;
+                var staleGoro = GetComponent<GoroSpriteOverride>();
+                if (staleGoro != null) Object.Destroy(staleGoro);
+            }
+            else if (type == CharacterType.Goro)
+            {
+                var goroArt = GetComponent<GoroSpriteOverride>();
+                if (goroArt == null) goroArt = gameObject.AddComponent<GoroSpriteOverride>();
+                goroArt.visual = GetComponent<PlayerVisualProxy>();
+                goroArt.targetRenderer = renderer;
+                var staleVolt = GetComponent<VoltUltSpriteOverride>();
+                if (staleVolt != null) Object.Destroy(staleVolt);
             }
             else
             {
-                var staleUltArt = GetComponent<VoltUltSpriteOverride>();
-                if (staleUltArt != null) Object.Destroy(staleUltArt);
+                var staleVolt = GetComponent<VoltUltSpriteOverride>();
+                if (staleVolt != null) Object.Destroy(staleVolt);
+                var staleGoro = GetComponent<GoroSpriteOverride>();
+                if (staleGoro != null) Object.Destroy(staleGoro);
             }
-            if(placeholderToDisable!=null&&(controller!=null||idle!=null))placeholderToDisable.SetActive(false);
+            // FIX35: every real character receives the same lightweight ult glow presentation.
+            // It duplicates the current sprite behind itself at low alpha, so no new glow sprites are required.
+            if (type != CharacterType.Generic && renderer != null)
+            {
+                var glow = GetComponent<UltGlowEffect>();
+                if (glow == null) glow = gameObject.AddComponent<UltGlowEffect>();
+                glow.visual = GetComponent<PlayerVisualProxy>();
+                glow.targetRenderer = renderer;
+                glow.character = type;
+            }
+            else
+            {
+                var staleGlow = GetComponent<UltGlowEffect>();
+                if (staleGlow != null) Object.Destroy(staleGlow);
+            }
+
+            // FIX34A: Leo, Volt and Goro all use exactly the same placeholder rule.
+            // The debug capsule is a prototype fallback only, so every real named character hides it
+            // regardless of whether its current art comes from an Animator Controller or a sprite override.
+            if (placeholderToDisable != null)
+                placeholderToDisable.SetActive(type == CharacterType.Generic);
         }
     }
 }

@@ -114,7 +114,7 @@ namespace BeastSoccer.Player
                     // Apply the collision carry-through AFTER GainBall. GainBall intentionally clears
                     // old contact velocity, which previously made a successful tackle feel like a stop.
                     player.ApplyTackleFollowThrough(throughDir, followMult);
-                    TeamManager.Instance?.AddTeamUltCharge(player.Side, GameConfig.Instance.ultChargePerAction);
+                    TeamManager.Instance?.AddTeamUltCharge(player.Side, GameConfig.Instance.ultChargeSuccessfulTackle);
                     AudioManager.Instance?.PlayTackle();
                     GameFeel.Shake(0.13f);
                     return true;

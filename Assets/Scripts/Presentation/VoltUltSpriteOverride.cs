@@ -5,10 +5,8 @@ using BeastSoccer.Data;
 namespace BeastSoccer.Presentation
 {
     /// <summary>
-    /// FIX32: temporary Volt ult presentation layer. During FLY it replaces the normal run
-    /// animation with the generated four-frame wing flap. During BLOCK it uses the supplied
-    /// expanded-wing frames while gameplay movement remains normal ground movement.
-    /// Runtime-created Sprites keep this patch scene-safe: no Animator Controller rebake required.
+    /// Volt ult art override. FIX35 automatically matches FLY/BLOCK art to Volt's normal
+    /// on-field body height so activating the ult cannot make him visibly shrink.
     /// </summary>
     [DefaultExecutionOrder(1000)]
     public class VoltUltSpriteOverride : MonoBehaviour
@@ -19,9 +17,13 @@ namespace BeastSoccer.Presentation
         public float blockFps = 8f;
         public float flightPixelsPerUnit = 300f;
         public float blockPixelsPerUnit = 500f;
+        public float ultHeightMultiplier = 1.03f;
 
         private Sprite[] flightFrames;
         private Sprite[] blockFrames;
+        private bool wasOverriding;
+        private UnityEngine.Vector3 baseLocalScale = UnityEngine.Vector3.one;
+        private float normalSpriteHeight = 1f;
 
         private void Awake()
         {
@@ -33,6 +35,15 @@ namespace BeastSoccer.Presentation
         private void Start()
         {
             if (flightFrames == null || blockFrames == null) LoadFrames();
+            CaptureNormalPresentation();
+        }
+
+        private void CaptureNormalPresentation()
+        {
+            if (targetRenderer == null) return;
+            baseLocalScale = targetRenderer.transform.localScale;
+            if (targetRenderer.sprite != null)
+                normalSpriteHeight = Mathf.Max(0.01f, targetRenderer.sprite.bounds.size.y);
         }
 
         private void LoadFrames()
@@ -76,14 +87,51 @@ namespace BeastSoccer.Presentation
                 fps = blockFps;
             }
 
-            if (frames == null || frames.Length == 0) return;
+            if (frames == null || frames.Length == 0)
+            {
+                if (wasOverriding)
+                {
+                    targetRenderer.transform.localScale = baseLocalScale;
+                    wasOverriding = false;
+                }
+                else
+                {
+                    // Keep following the actual normal presentation in case its scale is adjusted elsewhere.
+                    baseLocalScale = targetRenderer.transform.localScale;
+                    if (targetRenderer.sprite != null)
+                        normalSpriteHeight = Mathf.Max(0.01f, targetRenderer.sprite.bounds.size.y);
+                }
+                return;
+            }
+
+            if (!wasOverriding)
+            {
+                CaptureNormalPresentation();
+                wasOverriding = true;
+            }
+
             int validCount = 0;
             for (int i = 0; i < frames.Length; i++) if (frames[i] != null) validCount++;
             if (validCount == 0) return;
 
             int frame = Mathf.FloorToInt(Time.time * Mathf.Max(1f, fps)) % frames.Length;
             for (int tries = 0; tries < frames.Length && frames[frame] == null; tries++) frame = (frame + 1) % frames.Length;
-            if (frames[frame] != null) targetRenderer.sprite = frames[frame];
+            Sprite chosen = frames[frame];
+            if (chosen == null) return;
+
+            targetRenderer.sprite = chosen;
+
+            // Match the normal visible body height rather than relying on arbitrary PPU guesses.
+            float ultHeight = Mathf.Max(0.01f, chosen.bounds.size.y);
+            float scaleFactor = (normalSpriteHeight / ultHeight) * Mathf.Max(0.5f, ultHeightMultiplier);
+            targetRenderer.transform.localScale = baseLocalScale * scaleFactor;
+        }
+
+        private void OnDisable()
+        {
+            if (targetRenderer != null && wasOverriding)
+                targetRenderer.transform.localScale = baseLocalScale;
+            wasOverriding = false;
         }
     }
 }

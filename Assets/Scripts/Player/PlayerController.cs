@@ -34,6 +34,7 @@ namespace BeastSoccer.Player
         public bool IsFlying => Ult != null && Ult.IsFlying;
         public bool IsGoroBulldozing => Character == CharacterType.Goro && Ult != null && Ult.IsActive && Ult.IsAttackingVariant && HasBall;
         public bool IsGoroCharging => Ult != null && Ult.IsCharging;
+        public bool IsGoroSlamming => Ult != null && Ult.IsSlamming;
         // While any Goro ultimate is active, a ball-carrying Goro cannot be stripped by an
         // ordinary outfield tackle. Goalkeepers remain the deliberate exception.
         public bool IsGoroUltTackleImmune => Character == CharacterType.Goro && Ult != null && Ult.IsActive && HasBall;
@@ -69,6 +70,7 @@ namespace BeastSoccer.Player
         private Coroutine kickRoutine;
         private Coroutine flightRoutine;
         private Coroutine goroChargeRoutine;
+        private Coroutine goroSlamRoutine;
         private Vector2 goroChargeDirection = Vector2.right;
         private float sprintBlend;
         private float baseSpeed = 1f, baseAccel = 1f, baseShot = 1f, baseStrength = 1f, baseTackle = 1f;
@@ -308,11 +310,13 @@ namespace BeastSoccer.Player
             if (rb == null || IsSuppressed || GameConfig.Instance == null) return;
             if (GameManager.Instance == null || GameManager.Instance.Phase != MatchPhase.Playing) return;
             if (Role == FieldRole.Goalkeeper) return;
-            Vector2 launch = Vector2.ClampMagnitude(velocity, GameConfig.Instance.goroChargePush);
-            // CHARGE is intentionally exceptional: victims are visibly launched immediately, then
-            // the normal bounded external-push decay takes over. This is not a second player input.
+            Vector2 launch = Vector2.ClampMagnitude(velocity, Mathf.Max(GameConfig.Instance.goroChargePush, GameConfig.Instance.goroSlamPush));
+            // Goro contact should feel extreme: immediate launch + a short airborne presentation arc.
             rb.linearVelocity = launch;
             externalPushVelocity = launch;
+            impactVisualStartedAt = Time.time;
+            impactVisualDuration = Mathf.Max(0.18f, GameConfig.Instance.goroLaunchVisualSeconds);
+            impactVisualPeak = Mathf.Max(0.4f, GameConfig.Instance.goroLaunchVisualHeight);
         }
 
         public void SetDefensiveActionLock(bool locked)
@@ -841,6 +845,12 @@ namespace BeastSoccer.Player
             goroChargeRoutine = StartCoroutine(GoroChargeRoutine(duration));
         }
 
+        public void BeginGoroSlam(float windupSeconds, float radius)
+        {
+            if (goroSlamRoutine != null) StopCoroutine(goroSlamRoutine);
+            goroSlamRoutine = StartCoroutine(GoroSlamRoutine(windupSeconds, radius));
+        }
+
         private IEnumerator GoroChargeRoutine(float duration)
         {
             float end = Time.time + Mathf.Max(0.1f, duration);
@@ -851,6 +861,49 @@ namespace BeastSoccer.Player
             if (bodyCollider != null) bodyCollider.isTrigger = false;
             Ult?.NotifyGoroChargeEnded();
             goroChargeRoutine = null;
+        }
+
+        private IEnumerator GoroSlamRoutine(float windupSeconds, float radius)
+        {
+            defensiveActionLocked = true;
+            float end = Time.time + Mathf.Max(0.05f, windupSeconds);
+            while (Time.time < end && Ult != null && Ult.IsActive && Ult.IsSlamming &&
+                   GameManager.Instance != null && GameManager.Instance.Phase == MatchPhase.Playing)
+                yield return null;
+
+            if (Ult == null || !Ult.IsActive || !Ult.IsSlamming || GameManager.Instance == null || GameManager.Instance.Phase != MatchPhase.Playing)
+            {
+                defensiveActionLocked = false;
+                Ult?.NotifyGoroSlamEnded();
+                goroSlamRoutine = null;
+                yield break;
+            }
+
+            ResolveGoroSlam(radius);
+            yield return new WaitForSeconds(0.08f);
+            defensiveActionLocked = false;
+            Ult?.NotifyGoroSlamEnded();
+            goroSlamRoutine = null;
+        }
+
+        private void ResolveGoroSlam(float radius)
+        {
+            if (rb == null || GameConfig.Instance == null) return;
+            float push = Mathf.Max(1f, GameConfig.Instance.goroSlamPush);
+            Vector2 center = rb.position;
+            var hits = Physics2D.OverlapCircleAll(center, Mathf.Max(0.8f, radius));
+            GameFeel.Shake(0.10f);
+            foreach (var hit in hits)
+            {
+                var other = hit != null ? hit.GetComponentInParent<PlayerController>() : null;
+                if (other == null || other == this || other.Side == Side || other.Role == FieldRole.Goalkeeper) continue;
+                Vector2 dir = (Vector2)other.transform.position - center;
+                if (dir.sqrMagnitude < 0.001f) dir = SafeAim();
+                dir.Normalize();
+                other.Defense?.CancelForControlChange();
+                other.ApplyGoroChargePush(dir * push);
+                other.Animation?.Trigger("Hit");
+            }
         }
 
         private IEnumerator FlightRoutine(float duration, float maxHeight)
@@ -912,8 +965,10 @@ namespace BeastSoccer.Player
             CancelPendingKick();
             if (flightRoutine != null) StopCoroutine(flightRoutine);
             if (goroChargeRoutine != null) StopCoroutine(goroChargeRoutine);
+            if (goroSlamRoutine != null) StopCoroutine(goroSlamRoutine);
             flightRoutine = null;
             goroChargeRoutine = null;
+            goroSlamRoutine = null;
             Defense?.CancelForRestart();
             desiredMove = Vector2.zero;
             inputMagnitude = 0f;
@@ -931,6 +986,7 @@ namespace BeastSoccer.Player
             bulldozeHitCooldowns.Clear();
             IsSuppressed = false;
             if (bodyCollider != null) bodyCollider.enabled = true;
+            Ult?.NotifyGoroSlamEnded();
             KeeperHoldUntil = 0f;
             possessionProtectedUntil = 0f;
             tackleLockedUntil = 0f;

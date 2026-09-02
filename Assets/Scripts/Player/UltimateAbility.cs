@@ -10,13 +10,14 @@ namespace BeastSoccer.Player
     [RequireComponent(typeof(PlayerController))]
     public class UltimateAbility : MonoBehaviour
     {
-        public float Charge { get; private set; }
+        public float Charge { get; private set; } = 1f;
         public bool IsActive { get; private set; }
         public bool IsActivating { get; private set; }
         public bool IsAttackingVariant { get; private set; }
         public bool IsWingBlockActive { get; private set; }
         public bool IsFlying { get; private set; }
         public bool IsCharging { get; private set; }
+        public bool IsSlamming { get; private set; }
         public float SpeedMultiplier { get; private set; } = 1f;
         public float ShotMultiplier { get; private set; } = 1f;
         public float StrengthMultiplier { get; private set; } = 1f;
@@ -25,8 +26,9 @@ namespace BeastSoccer.Player
         public float ActiveFractionRemaining => IsActivating ? 1f : (IsActive && GameConfig.Instance != null ? Mathf.Clamp01(ActiveSecondsRemaining / Mathf.Max(0.01f, GameConfig.Instance.ultDurationSeconds)) : 0f);
         public bool CanTriggerVoltFlight => player != null && player.Character == CharacterType.Volt && player.IsHuman && IsActive && !IsActivating && TeamHasPossession() && !IsFlying && !IsWingBlockActive && GameManager.Instance != null && GameManager.Instance.Phase == MatchPhase.Playing;
         public bool CanTriggerVoltBlock => player != null && player.Character == CharacterType.Volt && player.IsHuman && IsActive && !IsActivating && !TeamHasPossession() && !IsFlying && !IsWingBlockActive && GameManager.Instance != null && GameManager.Instance.Phase == MatchPhase.Playing;
-        public bool CanTriggerGoroCharge => player != null && player.Character == CharacterType.Goro && player.IsHuman && IsActive && !IsActivating && IsAttackingVariant && !IsCharging && GameManager.Instance != null && GameManager.Instance.Phase == MatchPhase.Playing;
-        public bool CanTriggerSpecialAction => CanTriggerVoltFlight || CanTriggerVoltBlock || CanTriggerGoroCharge;
+        public bool CanTriggerGoroCharge => player != null && player.Character == CharacterType.Goro && player.IsHuman && IsActive && !IsActivating && TeamHasPossession() && !IsCharging && !IsSlamming && GameManager.Instance != null && GameManager.Instance.Phase == MatchPhase.Playing;
+        public bool CanTriggerGoroSlam => player != null && player.Character == CharacterType.Goro && player.IsHuman && IsActive && !IsActivating && !TeamHasPossession() && !IsCharging && !IsSlamming && Time.time >= nextGoroSlamAllowed && GameManager.Instance != null && GameManager.Instance.Phase == MatchPhase.Playing;
+        public bool CanTriggerSpecialAction => CanTriggerVoltFlight || CanTriggerVoltBlock || CanTriggerGoroCharge || CanTriggerGoroSlam;
         public bool VoltFlightUsed => false; // flights are reusable while the ult timer remains active
 
         public BoxCollider2D wingBlockCollider;
@@ -39,6 +41,7 @@ namespace BeastSoccer.Player
         private float passiveLockUntil;
         private float preUltTimeScale = 1f;
         private bool ownsActivationSlowMo;
+        private float nextGoroSlamAllowed;
 
         private void Awake()
         {
@@ -307,7 +310,18 @@ namespace BeastSoccer.Player
             IsCharging = true;
             player.BeginGoroCharge(GameConfig.Instance.goroChargeSeconds);
             player.Animation?.Trigger("Charge");
-            GameFeel.Shake(0.06f);
+            GameFeel.Shake(0.08f);
+            return true;
+        }
+
+        public bool TryGoroSlam()
+        {
+            if (!CanTriggerGoroSlam || GameConfig.Instance == null) return false;
+            IsSlamming = true;
+            nextGoroSlamAllowed = Time.time + Mathf.Max(0.3f, GameConfig.Instance.goroSlamCooldown);
+            player.BeginGoroSlam(GameConfig.Instance.goroSlamWindupSeconds, GameConfig.Instance.goroSlamRadius);
+            player.Animation?.Trigger("Charge");
+            GameFeel.Shake(0.07f);
             return true;
         }
 
@@ -316,7 +330,8 @@ namespace BeastSoccer.Player
             if (player == null) return false;
             if (player.Character == CharacterType.Volt)
                 return TeamHasPossession() ? TryVoltFlight() : TryVoltBlock();
-            if (player.Character == CharacterType.Goro) return TryGoroCharge();
+            if (player.Character == CharacterType.Goro)
+                return TeamHasPossession() ? TryGoroCharge() : TryGoroSlam();
             return false;
         }
 
@@ -331,6 +346,12 @@ namespace BeastSoccer.Player
         {
             if (player.Character != CharacterType.Goro) return;
             IsCharging = false;
+        }
+
+        public void NotifyGoroSlamEnded()
+        {
+            if (player == null || player.Character != CharacterType.Goro) return;
+            IsSlamming = false;
         }
 
         public void CancelForRestart()
@@ -350,6 +371,7 @@ namespace BeastSoccer.Player
             EndVoltBlock();
             IsFlying=false;
             IsCharging=false;
+            IsSlamming=false;
             ActiveSecondsRemaining=0f;
             SpeedMultiplier=ShotMultiplier=StrengthMultiplier=TackleMultiplier=1f;
             if (wingBlockCollider != null) wingBlockCollider.enabled=false;

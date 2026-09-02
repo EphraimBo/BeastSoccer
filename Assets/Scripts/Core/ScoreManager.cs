@@ -57,10 +57,10 @@ namespace BeastSoccer.Core
 
         private void AwardGoalCharge(TeamSide side, PlayerController scorer)
         {
-            var special = TeamManager.Instance.SpecialFor(side);
-            if (special == null || special.Ult == null) return;
-            if (scorer == special) special.Ult.AddCharge(GameConfig.Instance.ultChargePersonalGoal);
-            else special.Ult.AddCharge(GameConfig.Instance.ultChargeTeamGoal);
+            var special = TeamManager.Instance != null ? TeamManager.Instance.SpecialFor(side) : null;
+            if (special == null || special.Ult == null || GameConfig.Instance == null) return;
+            // FIX38: any goal by this team fills its special character's ultimate completely.
+            special.Ult.AddCharge(Mathf.Max(0f, GameConfig.Instance.ultChargeGoal));
         }
     }
 }

@@ -1604,7 +1604,7 @@ RectTransform:
   m_GameObject: {fileID: 120320720}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 4.4605, y: 2.09, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1189230628}
@@ -1612,7 +1612,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 795, y: -335}
+  m_AnchoredPosition: {x: -28, y: -474}
   m_SizeDelta: {x: 184, y: 20}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &120320722
@@ -4523,7 +4523,7 @@ RectTransform:
   m_GameObject: {fileID: 438006375}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1.27, y: 1.29, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 706010252}
@@ -4532,7 +4532,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 795, y: -440}
+  m_AnchoredPosition: {x: 795, y: -399}
   m_SizeDelta: {x: 188, y: 188}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &438006379
@@ -5647,7 +5647,7 @@ RectTransform:
   m_GameObject: {fileID: 612276861}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1, y: 0.77, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1168888505}
@@ -5655,7 +5655,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 595, y: -435}
+  m_AnchoredPosition: {x: 558, y: -435}
   m_SizeDelta: {x: 168, y: 168}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &612276863
@@ -6564,7 +6564,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 0.82, b: 0.15, a: 0.42}
+  m_Color: {r: 1, g: 0.23638754, b: 0.1490196, a: 0.42}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -10233,7 +10233,7 @@ RectTransform:
   m_GameObject: {fileID: 1140907075}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1.534896, y: 0.72457653, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1535566740}
@@ -10241,7 +10241,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -700, y: -175}
+  m_AnchoredPosition: {x: -700, y: -119}
   m_SizeDelta: {x: 250, y: 38}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1147476355
@@ -11021,7 +11021,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.65, g: 0.2, b: 1, a: 1}
+  m_Color: {r: 0.94716984, g: 0.12688503, b: 0.14154494, a: 1}
   m_RaycastTarget: 0
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -11869,7 +11869,7 @@ RectTransform:
   m_GameObject: {fileID: 1258644039}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 0.94301146, y: 0.869, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 333492124}
@@ -11877,7 +11877,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 610, y: -285}
+  m_AnchoredPosition: {x: 592, y: -285}
   m_SizeDelta: {x: 154, y: 154}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1258644041
@@ -13364,7 +13364,7 @@ RectTransform:
   m_GameObject: {fileID: 1384328783}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1.0115119, y: 0.68, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 854877455}
@@ -13372,7 +13372,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 790, y: -245}
+  m_AnchoredPosition: {x: 790, y: -211}
   m_SizeDelta: {x: 190, y: 190}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1384328785
@@ -13486,7 +13486,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &1388038838
 Transform:
   m_ObjectHideFlags: 0
@@ -15160,6 +15160,8 @@ MonoBehaviour:
   ultChargeTeamGoal: 0.3
   ultChargePersonalGoal: 0.65
   ultChargePerAction: 0
+  ultChargeSuccessfulTackle: 0.5
+  ultChargeGoal: 1
   ultPassiveRechargePerSec: 0.028
   leoAtkSpeedBonus: 1.28
   leoAtkShotBonus: 1.42
@@ -15179,6 +15181,12 @@ MonoBehaviour:
   goroShoveSideBias: 0.9
   goroShoveBehindBias: 0.42
   goroChargeShakeInterval: 0.18
+  goroSlamWindupSeconds: 0.16
+  goroSlamCooldown: 1
+  goroSlamRadius: 2.35
+  goroSlamPush: 12
+  goroLaunchVisualSeconds: 0.34
+  goroLaunchVisualHeight: 0.95
   goroSizeIncrease: 0.15
   voltAtkSpeedBonus: 1.35
   voltAtkShotBonus: 1.15
@@ -15189,6 +15197,7 @@ MonoBehaviour:
   voltFlyVisualBob: 0.025
   voltWingWidthFraction: 0.28
   voltWingWalkSpeed: 0.62
+  voltBlockSeconds: 3
 --- !u!4 &1514921276
 Transform:
   m_ObjectHideFlags: 0
@@ -15376,14 +15385,14 @@ RectTransform:
   m_GameObject: {fileID: 1535566739}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1, y: 2.33, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 1140907078}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -115, y: -9}
+  m_AnchoredPosition: {x: -115, y: 0.3}
   m_SizeDelta: {x: 230, y: 10}
   m_Pivot: {x: 0, y: 0.5}
 --- !u!222 &1535566741
@@ -17686,7 +17695,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1756690203
 RectTransform:
   m_ObjectHideFlags: 0
@@ -18432,7 +18441,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1835046720}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
@@ -18472,14 +18481,14 @@ RectTransform:
   m_GameObject: {fileID: 1835046720}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalScale: {x: 1.4285659, y: 1.4097, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 692163804}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 9, y: -31}
   m_SizeDelta: {x: 390, y: 390}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1835949822
@@ -19513,6 +19522,7 @@ GameObject:
   - component: {fileID: 1912463243}
   - component: {fileID: 1912463242}
   - component: {fileID: 1912463241}
+  - component: {fileID: 1912463250}
   m_Layer: 0
   m_Name: Canvas
   m_TagString: Untagged
@@ -19723,6 +19733,641 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!114 &1912463250
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1912463240}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5d4ef422f8c77c8499d0ad00b1d8d938, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BeastSoccer.UI.BeastMatchLiveLayout
+  livePreview: 1
+  items:
+  - label: Canvas  /  UltGoalBanner
+    path: UltGoalBanner
+    target: {fileID: 1835949825}
+    anchoredPosition: {x: 0, y: 250}
+    sizeDelta: {x: 900, y: 90}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: Canvas  /  TopHUD_Backdrop
+    path: TopHUD_Backdrop
+    target: {fileID: 1883871717}
+    anchoredPosition: {x: 0, y: 466}
+    sizeDelta: {x: 350, y: 118}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: Canvas  /  Score
+    path: Score
+    target: {fileID: 968231498}
+    anchoredPosition: {x: 0, y: 490}
+    sizeDelta: {x: 240, y: 55}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: Canvas  /  Timer
+    path: Timer
+    target: {fileID: 1135399644}
+    anchoredPosition: {x: 0, y: 445}
+    sizeDelta: {x: 240, y: 45}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: Canvas  /  Banner
+    path: Banner
+    target: {fileID: 135685317}
+    anchoredPosition: {x: 0, y: 350}
+    sizeDelta: {x: 700, y: 80}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: Canvas  /  Minimap
+    path: Minimap
+    target: {fileID: 520017592}
+    anchoredPosition: {x: -760, y: 400}
+    sizeDelta: {x: 300, y: 180}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: Minimap  /  P0
+    path: Minimap/P0
+    target: {fileID: 202875443}
+    anchoredPosition: {x: 0, y: 0}
+    sizeDelta: {x: 16, y: 16}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: Minimap  /  P1
+    path: Minimap/P1
+    target: {fileID: 1159376658}
+    anchoredPosition: {x: 0, y: 0}
+    sizeDelta: {x: 16, y: 16}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: Minimap  /  P2
+    path: Minimap/P2
+    target: {fileID: 1687403673}
+    anchoredPosition: {x: 0, y: 0}
+    sizeDelta: {x: 16, y: 16}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: Minimap  /  P3
+    path: Minimap/P3
+    target: {fileID: 1825556106}
+    anchoredPosition: {x: 0, y: 0}
+    sizeDelta: {x: 16, y: 16}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: Minimap  /  P4
+    path: Minimap/P4
+    target: {fileID: 990796114}
+    anchoredPosition: {x: 0, y: 0}
+    sizeDelta: {x: 16, y: 16}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: Minimap  /  P5
+    path: Minimap/P5
+    target: {fileID: 194332605}
+    anchoredPosition: {x: 0, y: 0}
+    sizeDelta: {x: 16, y: 16}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: Minimap  /  P6
+    path: Minimap/P6
+    target: {fileID: 1728969516}
+    anchoredPosition: {x: 0, y: 0}
+    sizeDelta: {x: 16, y: 16}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: Minimap  /  P7
+    path: Minimap/P7
+    target: {fileID: 1780983336}
+    anchoredPosition: {x: 0, y: 0}
+    sizeDelta: {x: 16, y: 16}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: Minimap  /  BallDot
+    path: Minimap/BallDot
+    target: {fileID: 1665825852}
+    anchoredPosition: {x: 0, y: 0}
+    sizeDelta: {x: 12, y: 12}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: Canvas  /  Joystick
+    path: Joystick
+    target: {fileID: 692163804}
+    anchoredPosition: {x: -690, y: -315}
+    sizeDelta: {x: 370, y: 370}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: Joystick  /  WalkRing
+    path: Joystick/WalkRing
+    target: {fileID: 323679291}
+    anchoredPosition: {x: 0, y: 0}
+    sizeDelta: {x: 390, y: 390}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: Joystick  /  SprintRing
+    path: Joystick/SprintRing
+    target: {fileID: 1835046723}
+    anchoredPosition: {x: 9, y: -31}
+    sizeDelta: {x: 390, y: 390}
+    localScale: {x: 1.4285659, y: 1.4097, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: Joystick  /  DirectionPadOuter
+    path: Joystick/DirectionPadOuter
+    target: {fileID: 1089650964}
+    anchoredPosition: {x: 0, y: 0}
+    sizeDelta: {x: 300, y: 300}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: Joystick  /  DirectionKnob
+    path: Joystick/DirectionKnob
+    target: {fileID: 2133110735}
+    anchoredPosition: {x: 0, y: 0}
+    sizeDelta: {x: 112, y: 112}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: Canvas  /  ActionPrimary
+    path: ActionPrimary
+    target: {fileID: 1384328784}
+    anchoredPosition: {x: 790, y: -211}
+    sizeDelta: {x: 190, y: 190}
+    localScale: {x: 1.0115119, y: 0.68, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: ActionPrimary  /  Text
+    path: ActionPrimary/Text
+    target: {fileID: 854877455}
+    anchoredPosition: {x: 0, y: 0}
+    sizeDelta: {x: 190, y: 190}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: Canvas  /  ActionSecondary
+    path: ActionSecondary
+    target: {fileID: 612276862}
+    anchoredPosition: {x: 558, y: -435}
+    sizeDelta: {x: 168, y: 168}
+    localScale: {x: 1, y: 0.77, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: ActionSecondary  /  Text
+    path: ActionSecondary/Text
+    target: {fileID: 1168888505}
+    anchoredPosition: {x: 0, y: 0}
+    sizeDelta: {x: 168, y: 168}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: Canvas  /  ActionTertiary
+    path: ActionTertiary
+    target: {fileID: 1258644040}
+    anchoredPosition: {x: 592, y: -285}
+    sizeDelta: {x: 154, y: 154}
+    localScale: {x: 0.94301146, y: 0.869, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: ActionTertiary  /  Text
+    path: ActionTertiary/Text
+    target: {fileID: 333492124}
+    anchoredPosition: {x: 0, y: 0}
+    sizeDelta: {x: 154, y: 154}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: Canvas  /  ULT
+    path: ULT
+    target: {fileID: 438006378}
+    anchoredPosition: {x: 795, y: -399}
+    sizeDelta: {x: 188, y: 188}
+    localScale: {x: 1.27, y: 1.29, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: ULT  /  ActiveDrain
+    path: ULT/ActiveDrain
+    target: {fileID: 706010252}
+    anchoredPosition: {x: 0, y: 0}
+    sizeDelta: {x: 180, y: 180}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: ULT  /  Text
+    path: ULT/Text
+    target: {fileID: 1756690203}
+    anchoredPosition: {x: 0, y: 0}
+    sizeDelta: {x: 188, y: 188}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: Canvas  /  SPECIAL_ACTION
+    path: SPECIAL_ACTION
+    target: {fileID: 1150596123}
+    anchoredPosition: {x: 600, y: -155}
+    sizeDelta: {x: 170, y: 76}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: SPECIAL_ACTION  /  Text
+    path: SPECIAL_ACTION/Text
+    target: {fileID: 1223219467}
+    anchoredPosition: {x: 0, y: 0}
+    sizeDelta: {x: 170, y: 76}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: Canvas  /  SWITCH
+    path: SWITCH
+    target: {fileID: 1227258063}
+    anchoredPosition: {x: 795, y: -95}
+    sizeDelta: {x: 170, y: 86}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: SWITCH  /  Text
+    path: SWITCH/Text
+    target: {fileID: 425443041}
+    anchoredPosition: {x: 0, y: 0}
+    sizeDelta: {x: 170, y: 86}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: Canvas  /  II
+    path: II
+    target: {fileID: 1188381731}
+    anchoredPosition: {x: 870, y: 490}
+    sizeDelta: {x: 80, y: 70}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: II  /  Text
+    path: II/Text
+    target: {fileID: 2111708976}
+    anchoredPosition: {x: 0, y: 0}
+    sizeDelta: {x: 80, y: 70}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: Canvas  /  SprintStamina
+    path: SprintStamina
+    target: {fileID: 1140907078}
+    anchoredPosition: {x: -700, y: -119}
+    sizeDelta: {x: 250, y: 38}
+    localScale: {x: 1.534896, y: 0.72457653, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: SprintStamina  /  Fill
+    path: SprintStamina/Fill
+    target: {fileID: 1535566740}
+    anchoredPosition: {x: -115, y: 0.3}
+    sizeDelta: {x: 230, y: 10}
+    localScale: {x: 1, y: 2.33, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0, y: 0.5}
+    editable: 1
+  - label: Canvas  /  UltMeter
+    path: UltMeter
+    target: {fileID: 120320721}
+    anchoredPosition: {x: -28, y: -474}
+    sizeDelta: {x: 184, y: 20}
+    localScale: {x: 4.4605, y: 2.09, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: UltMeter  /  Fill
+    path: UltMeter/Fill
+    target: {fileID: 1189230628}
+    anchoredPosition: {x: 0, y: 0}
+    sizeDelta: {x: 184, y: 20}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: Canvas  /  UltStamina
+    path: UltStamina
+    target: {fileID: 938399301}
+    anchoredPosition: {x: 0, y: 385}
+    sizeDelta: {x: 520, y: 54}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: UltStamina  /  StaminaFill
+    path: UltStamina/StaminaFill
+    target: {fileID: 1631740918}
+    anchoredPosition: {x: 0, y: -14}
+    sizeDelta: {x: 500, y: 14}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: Canvas  /  HalfTimePanel
+    path: HalfTimePanel
+    target: {fileID: 1225778877}
+    anchoredPosition: {x: 0, y: 0}
+    sizeDelta: {x: 700, y: 350}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: HalfTimePanel  /  HalfText
+    path: HalfTimePanel/HalfText
+    target: {fileID: 1533841570}
+    anchoredPosition: {x: 0, y: 70}
+    sizeDelta: {x: 500, y: 80}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: HalfTimePanel  /  CONTINUE
+    path: HalfTimePanel/CONTINUE
+    target: {fileID: 190639061}
+    anchoredPosition: {x: 0, y: -70}
+    sizeDelta: {x: 260, y: 90}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: CONTINUE  /  Text
+    path: HalfTimePanel/CONTINUE/Text
+    target: {fileID: 1082641007}
+    anchoredPosition: {x: 0, y: 0}
+    sizeDelta: {x: 260, y: 90}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: Canvas  /  PausePanel
+    path: PausePanel
+    target: {fileID: 1097261274}
+    anchoredPosition: {x: 0, y: 0}
+    sizeDelta: {x: 620, y: 500}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: PausePanel  /  PauseText
+    path: PausePanel/PauseText
+    target: {fileID: 1907632789}
+    anchoredPosition: {x: 0, y: 165}
+    sizeDelta: {x: 400, y: 80}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: PausePanel  /  RESUME
+    path: PausePanel/RESUME
+    target: {fileID: 236499204}
+    anchoredPosition: {x: 0, y: 55}
+    sizeDelta: {x: 280, y: 82}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: RESUME  /  Text
+    path: PausePanel/RESUME/Text
+    target: {fileID: 879209682}
+    anchoredPosition: {x: 0, y: 0}
+    sizeDelta: {x: 280, y: 82}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: PausePanel  /  RESTART MATCH
+    path: PausePanel/RESTART MATCH
+    target: {fileID: 1959364954}
+    anchoredPosition: {x: 0, y: -55}
+    sizeDelta: {x: 280, y: 82}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: RESTART MATCH  /  Text
+    path: PausePanel/RESTART MATCH/Text
+    target: {fileID: 48214414}
+    anchoredPosition: {x: 0, y: 0}
+    sizeDelta: {x: 280, y: 82}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: PausePanel  /  QUIT TO MENU
+    path: PausePanel/QUIT TO MENU
+    target: {fileID: 339070481}
+    anchoredPosition: {x: 0, y: -165}
+    sizeDelta: {x: 280, y: 82}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: QUIT TO MENU  /  Text
+    path: PausePanel/QUIT TO MENU/Text
+    target: {fileID: 1732568405}
+    anchoredPosition: {x: 0, y: 0}
+    sizeDelta: {x: 280, y: 82}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: Canvas  /  FullTimePanel
+    path: FullTimePanel
+    target: {fileID: 880034059}
+    anchoredPosition: {x: 0, y: 0}
+    sizeDelta: {x: 720, y: 590}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: FullTimePanel  /  FullTimeText
+    path: FullTimePanel/FullTimeText
+    target: {fileID: 82771354}
+    anchoredPosition: {x: 0, y: 220}
+    sizeDelta: {x: 520, y: 80}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: FullTimePanel  /  FinalScore
+    path: FullTimePanel/FinalScore
+    target: {fileID: 48659929}
+    anchoredPosition: {x: 0, y: 130}
+    sizeDelta: {x: 420, y: 70}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: FullTimePanel  /  RESTART MATCH
+    path: FullTimePanel/RESTART MATCH
+    target: {fileID: 1263384871}
+    anchoredPosition: {x: 0, y: 25}
+    sizeDelta: {x: 320, y: 82}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: RESTART MATCH  /  Text
+    path: FullTimePanel/RESTART MATCH/Text
+    target: {fileID: 1872976020}
+    anchoredPosition: {x: 0, y: 0}
+    sizeDelta: {x: 320, y: 82}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: FullTimePanel  /  CHANGE PLAYERS
+    path: FullTimePanel/CHANGE PLAYERS
+    target: {fileID: 1713034777}
+    anchoredPosition: {x: 0, y: -85}
+    sizeDelta: {x: 320, y: 82}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: CHANGE PLAYERS  /  Text
+    path: FullTimePanel/CHANGE PLAYERS/Text
+    target: {fileID: 1461914088}
+    anchoredPosition: {x: 0, y: 0}
+    sizeDelta: {x: 320, y: 82}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: FullTimePanel  /  MAIN MENU
+    path: FullTimePanel/MAIN MENU
+    target: {fileID: 1220386536}
+    anchoredPosition: {x: 0, y: -195}
+    sizeDelta: {x: 320, y: 82}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  - label: MAIN MENU  /  Text
+    path: FullTimePanel/MAIN MENU/Text
+    target: {fileID: 916976363}
+    anchoredPosition: {x: 0, y: 0}
+    sizeDelta: {x: 320, y: 82}
+    localScale: {x: 1, y: 1, z: 1}
+    anchorMin: {x: 0.5, y: 0.5}
+    anchorMax: {x: 0.5, y: 0.5}
+    pivot: {x: 0.5, y: 0.5}
+    editable: 1
+  canvasRoot: {fileID: 1912463249}
 --- !u!1 &1915959343
 GameObject:
   m_ObjectHideFlags: 0

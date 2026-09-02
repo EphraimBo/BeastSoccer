@@ -40,9 +40,82 @@ namespace BeastSoccer.Player
         public void SwitchToClosestToBall()
         {
             if (GameManager.Instance == null || GameManager.Instance.Phase != MatchPhase.Playing || IsKeeperSequence || TeamManager.Instance == null) return;
+
             var current = TeamManager.Instance.CurrentHuman();
-            var target = TeamManager.Instance.BestManualSwitchTarget(current);
-            if (target != null) TeamManager.Instance.SetHuman(target);
+
+            // FIX37: while defending, SWITCH uses a deliberate three-player cycle instead of
+            // always jumping to the nearest defender:
+            //   Special -> closest-to-ball -> remaining outfielder -> Special.
+            // If control is currently on some unexpected player, the first press returns to Special.
+            bool homeHasPossession = GameManager.Instance.Possession == Possession.Home;
+            if (!homeHasPossession)
+            {
+                var target = DefensiveSwitchCycleTarget(current);
+                if (target != null) TeamManager.Instance.SetHuman(target);
+                return;
+            }
+
+            // Keep the existing manual-switch behavior when our team actually owns the ball.
+            var normalTarget = TeamManager.Instance.BestManualSwitchTarget(current);
+            if (normalTarget != null) TeamManager.Instance.SetHuman(normalTarget);
+        }
+
+        private PlayerController DefensiveSwitchCycleTarget(PlayerController current)
+        {
+            if (TeamManager.Instance == null) return null;
+
+            var specialPlayer = TeamManager.Instance.SpecialFor(TeamSide.Home);
+            if (!IsValidOutfieldSwitchTarget(specialPlayer)) specialPlayer = null;
+
+            // The closest stage deliberately ignores the special so pressing SWITCH from the
+            // special character always advances to a different defender.
+            PlayerController closest = null;
+            float closestSq = float.MaxValue;
+            Vector2 ballPos = TeamManager.Instance.Ball != null
+                ? (Vector2)TeamManager.Instance.Ball.position
+                : Vector2.zero;
+
+            foreach (var p in TeamManager.Instance.HomeTeam)
+            {
+                if (!IsValidOutfieldSwitchTarget(p) || p == specialPlayer) continue;
+                float d = TeamManager.Instance.Ball != null
+                    ? ((Vector2)p.transform.position - ballPos).sqrMagnitude
+                    : 0f;
+                if (closest == null || d < closestSq)
+                {
+                    closest = p;
+                    closestSq = d;
+                }
+            }
+
+            // With 3 outfielders this is the one player that is neither Special nor Closest.
+            PlayerController remaining = null;
+            foreach (var p in TeamManager.Instance.HomeTeam)
+            {
+                if (!IsValidOutfieldSwitchTarget(p) || p == specialPlayer || p == closest) continue;
+                remaining = p;
+                break;
+            }
+
+            // Primary/default defensive selection is always the chosen special character.
+            if (current == null || current == specialPlayer ||
+                (current != closest && current != remaining))
+            {
+                if (current == specialPlayer)
+                    return closest != null ? closest : (remaining != null ? remaining : specialPlayer);
+                return specialPlayer != null ? specialPlayer : (closest != null ? closest : remaining);
+            }
+
+            if (current == closest)
+                return remaining != null ? remaining : (specialPlayer != null ? specialPlayer : closest);
+
+            // current == remaining
+            return specialPlayer != null ? specialPlayer : (closest != null ? closest : remaining);
+        }
+
+        private static bool IsValidOutfieldSwitchTarget(PlayerController p)
+        {
+            return p != null && p.Side == TeamSide.Home && p.Role != FieldRole.Goalkeeper && !p.IsSuppressed;
         }
 
         private void BeginKeeperSequence()

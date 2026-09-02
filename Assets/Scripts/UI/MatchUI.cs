@@ -18,6 +18,8 @@ namespace BeastSoccer.UI
         public GameObject ultStaminaPanel;
         public Text ultDebugText, ultGoalText;
         public float sprintStaminaMaxWidth = 230f;
+        private float ultMeterMaxWidth = -1f;
+        private UnityEngine.Vector3 ultButtonBaseScale = UnityEngine.Vector3.one;
         private bool wasUltActive;
         private int bannerBaseFontSize;
         private Color bannerBaseColor = Color.white;
@@ -35,6 +37,11 @@ namespace BeastSoccer.UI
 
         private void Start()
         {
+            ConfigureUltChargeMeter();
+            if (ultMeterFill != null && ultMeterFill.rectTransform != null)
+                ultMeterMaxWidth = Mathf.Max(1f, ultMeterFill.rectTransform.sizeDelta.x);
+            if (ultimateButton != null)
+                ultButtonBaseScale = ultimateButton.transform.localScale;
             Bind();
             UpdateScore(ScoreManager.Instance != null ? ScoreManager.Instance.HomeScore : 0,
                         ScoreManager.Instance != null ? ScoreManager.Instance.AwayScore : 0);
@@ -45,6 +52,21 @@ namespace BeastSoccer.UI
             }
             if (GameManager.Instance != null) Phase(GameManager.Instance.Phase);
             RefreshActionContext(true);
+        }
+
+        private void ConfigureUltChargeMeter()
+        {
+            // FIX40: match the stamina-bar implementation. The visible fill RectTransform itself
+            // grows/shrinks horizontally, so this works even when the supplied UI art is not a
+            // Unity Filled Image and preserves the user's edited placement/height.
+            if (ultMeterFill != null)
+            {
+                ultMeterFill.type = Image.Type.Simple;
+                ultMeterFill.enabled = true;
+                var c = ultMeterFill.color;
+                c.a = Mathf.Max(c.a, 0.92f);
+                ultMeterFill.color = c;
+            }
         }
 
         private void Bind()
@@ -215,55 +237,64 @@ namespace BeastSoccer.UI
             var ult = special != null ? special.Ult : null;
             float charge = ult != null ? ult.Charge : 0f;
             bool active = ult != null && (ult.IsActive || ult.IsActivating);
+            float meter01 = active && ult != null ? ult.ActiveFractionRemaining : Mathf.Clamp01(charge);
 
-            if (ultMeterFill != null) ultMeterFill.fillAmount = charge;
+            // FIX40: same behavior as the sprint stamina bar: physically resize the existing
+            // positioned fill object. Charge grows 0 -> 100%; active ult drains 100% -> 0%.
+            if (ultMeterFill != null)
+            {
+                ultMeterFill.enabled = true;
+                ultMeterFill.type = Image.Type.Simple;
+                RectTransform rt = ultMeterFill.rectTransform;
+                if (rt != null)
+                {
+                    if (ultMeterMaxWidth <= 0f)
+                        ultMeterMaxWidth = Mathf.Max(1f, rt.sizeDelta.x);
+                    Vector2 size = rt.sizeDelta;
+                    size.x = ultMeterMaxWidth * meter01;
+                    rt.sizeDelta = size;
+                }
+            }
+
             if (ultActiveFill != null)
             {
-                ultActiveFill.enabled = active;
-                ultActiveFill.fillAmount = active ? ult.ActiveFractionRemaining : 0f;
+                ultActiveFill.fillAmount = 0f;
+                ultActiveFill.enabled = false;
+            }
+            if (ultStaminaFill != null)
+            {
+                ultStaminaFill.fillAmount = 0f;
+                ultStaminaFill.enabled = false;
             }
 
             bool controllingSpecial = special != null && human == special;
+            bool selectable = GameManager.Instance != null &&
+                              GameManager.Instance.Phase == MatchPhase.Playing &&
+                              controllingSpecial && !active && charge >= 0.999f;
+
             if (ultimateButton != null)
             {
-                // FIX21: the ULT control is permanent HUD furniture. Possession and charge only
-                // affect whether it can be pressed / how it is tinted; they never hide the button.
                 ultimateButton.gameObject.SetActive(true);
-                ultimateButton.interactable = GameManager.Instance != null && GameManager.Instance.Phase == MatchPhase.Playing && controllingSpecial && !active && charge >= 0.999f;
+                ultimateButton.interactable = selectable;
+                if (ultButtonBaseScale == UnityEngine.Vector3.zero)
+                    ultButtonBaseScale = ultimateButton.transform.localScale;
+                ultimateButton.transform.localScale = ultButtonBaseScale * (selectable ? 1.25f : 1f);
             }
 
+            // Only two visual states: selectable / not selectable. No percentages, READY or ACTIVE text.
             if (ultimateLabel != null)
-            {
-                // When supplied icon art is present, keep text minimal so it does not cover the art.
-                ultimateLabel.text = ultButtonSprite != null
-                    ? (active ? "ACTIVE" : (controllingSpecial ? "" : "SPECIAL"))
-                    : (active ? "ULT ACTIVE" : (controllingSpecial ? "ULT" : "ULT\nSPECIAL"));
-            }
+                ultimateLabel.text = "ULT";
 
             if (ultButtonImage != null)
             {
-                if (ultButtonSprite != null) { ultButtonImage.sprite = ultButtonSprite; ultButtonImage.preserveAspect = true; }
-                if (active) ultButtonImage.color = new Color(1f,.92f,.55f,1f);
-                else if (controllingSpecial && charge >= 0.999f) ultButtonImage.color = new Color(.70f,.24f,1f,1f);
-                else ultButtonImage.color = new Color(.38f,.25f,.48f,.90f);
-            }
-
-            if (ultStaminaPanel != null) ultStaminaPanel.SetActive(active);
-            if (ultStaminaFill != null) ultStaminaFill.fillAmount = active ? ult.ActiveFractionRemaining : 0f;
-            if (ultDebugText != null)
-            {
-                bool showDebug = false; // FIX22: remove the intrusive ult debug overlay from normal play.
-                ultDebugText.gameObject.SetActive(showDebug);
-                if (showDebug)
+                if (ultButtonSprite != null)
                 {
-                    string variant = ult.IsAttackingVariant ? "ATTACK" : "DEFENCE";
-                    string specialState = "";
-                    if (special.Character == CharacterType.Volt && ult.IsAttackingVariant)
-                        specialState = ult.IsFlying ? "   FLIGHT ACTIVE" : "   FLY READY";
-                    else if (special.Character == CharacterType.Goro && ult.IsAttackingVariant)
-                        specialState = ult.IsCharging ? "   CHARGE ACTIVE" : "   CHARGE READY";
-                    ultDebugText.text = $"{special.Character.ToString().ToUpperInvariant()} ULT · {variant}   SPD x{ult.SpeedMultiplier:0.00}   SHOT x{ult.ShotMultiplier:0.00}   STR x{ult.StrengthMultiplier:0.00}   TKL x{ult.TackleMultiplier:0.00}{specialState}";
+                    ultButtonImage.sprite = ultButtonSprite;
+                    ultButtonImage.preserveAspect = true;
                 }
+                ultButtonImage.color = selectable
+                    ? Color.white
+                    : new Color(.55f,.55f,.55f,.72f);
             }
         }
 
@@ -305,11 +336,23 @@ namespace BeastSoccer.UI
             }
             else
             {
-                if (flyLabel != null) flyLabel.text = ult.IsCharging ? "CHARGING" : "CHARGE";
-                if (ult.IsCharging) SetButtonColor(flyButton, new Color(1f,.62f,.12f,.98f));
-                else if (attackingUlt) SetButtonColor(flyButton, new Color(.92f,.32f,.10f,.95f));
-                else SetButtonColor(flyButton, new Color(.42f,.22f,.16f,.62f));
-                flyButton.interactable = attackingUlt && ult.CanTriggerSpecialAction;
+                bool teamHasBall = ult.TeamHasPossession();
+                bool activeUlt = ult.IsActive && !ult.IsActivating;
+                if (teamHasBall)
+                {
+                    if (flyLabel != null) flyLabel.text = ult.IsCharging ? "CHARGING" : "CHARGE";
+                    if (ult.IsCharging) SetButtonColor(flyButton, new Color(1f,.62f,.12f,.98f));
+                    else if (activeUlt) SetButtonColor(flyButton, new Color(.92f,.32f,.10f,.95f));
+                    else SetButtonColor(flyButton, new Color(.42f,.22f,.16f,.62f));
+                }
+                else
+                {
+                    if (flyLabel != null) flyLabel.text = ult.IsSlamming ? "SLAMMING" : "SLAM";
+                    if (ult.IsSlamming) SetButtonColor(flyButton, new Color(.55f,1f,.28f,.98f));
+                    else if (activeUlt) SetButtonColor(flyButton, new Color(.26f,.62f,.16f,.95f));
+                    else SetButtonColor(flyButton, new Color(.20f,.30f,.18f,.62f));
+                }
+                flyButton.interactable = ult.CanTriggerSpecialAction;
             }
         }
 
