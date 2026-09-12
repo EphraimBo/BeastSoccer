@@ -14,6 +14,8 @@ namespace BeastSoccer.Player
         private PlayerController player;
         private Rigidbody2D rb;
         private bool busy;
+        public bool IsTackling { get; private set; }
+        public float TackleVisualStartedAt { get; private set; } = -999f;
 
         private void Awake() { player=GetComponent<PlayerController>(); rb=GetComponent<Rigidbody2D>(); }
         private void OnDisable() { CancelAll(); }
@@ -27,6 +29,8 @@ namespace BeastSoccer.Player
         private IEnumerator TackleRoutine()
         {
             busy=true;
+            IsTackling = true;
+            TackleVisualStartedAt = Time.time;
             // Tackling is an action state, not a locomotion freeze. The player keeps moving
             // through the tackle so the button never feels like a brake pedal.
             // FIX22: the tackle is represented by the collision itself rather than a canned lunge animation.
@@ -47,6 +51,7 @@ namespace BeastSoccer.Player
             }
 
             yield return new WaitForSeconds(GameConfig.Instance.tackleRecoverySeconds / Mathf.Max(0.5f, player.TackleMultiplier));
+            IsTackling = false;
             busy=false;
         }
 
@@ -114,7 +119,7 @@ namespace BeastSoccer.Player
                     // Apply the collision carry-through AFTER GainBall. GainBall intentionally clears
                     // old contact velocity, which previously made a successful tackle feel like a stop.
                     player.ApplyTackleFollowThrough(throughDir, followMult);
-                    TeamManager.Instance?.AddTeamUltCharge(player.Side, GameConfig.Instance.ultChargeSuccessfulTackle);
+                    TeamManager.Instance?.AddTeamUltCharge(player.Side, GameConfig.Instance.ultChargePerAction);
                     AudioManager.Instance?.PlayTackle();
                     GameFeel.Shake(0.13f);
                     return true;
@@ -191,6 +196,8 @@ namespace BeastSoccer.Player
         {
             StopAllCoroutines();
             busy=false;
+            IsTackling=false;
+            TackleVisualStartedAt=-999f;
             if(player!=null) player.SetDefensiveActionLock(false);
         }
 

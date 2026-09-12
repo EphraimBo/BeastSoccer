@@ -17,6 +17,7 @@ namespace BeastSoccer.AI
 
         private void Update()
         {
+            if (player != null && player.Role == FieldRole.Goalkeeper) return;
             // Deliberately hard-disabled unless BOTH the global debug switch and this component opt in.
             // Normal prototype play never fires AI ults on its own.
             if(GameConfig.Instance==null || !GameConfig.Instance.enableAIAutoUlts || !allowAutoUlt) return;

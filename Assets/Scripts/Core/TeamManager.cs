@@ -33,6 +33,13 @@ namespace BeastSoccer.Core
 
         public void ApplyCharacterSelections(CharacterType homeSpecial, CharacterType awaySpecial)
         {
+            if (DuelRules.Enabled)
+            {
+                PrepareDuelTeam(HomeTeam);
+                PrepareDuelTeam(AwayTeam);
+                homeSpecial = DuelRules.Outfielder(homeSpecial, CharacterType.Leo);
+                awaySpecial = DuelRules.Outfielder(awaySpecial, CharacterType.Volt);
+            }
             var hs = SpecialFor(TeamSide.Home);
             var aspc = SpecialFor(TeamSide.Away);
             if (hs != null) hs.ConfigureCharacter(homeSpecial);
@@ -45,6 +52,40 @@ namespace BeastSoccer.Core
             ConfigureFriendlyBodyCollisions(AwayTeam);
             ConfigureBallPlayerBodyCollisions();
             SetHuman(hs);
+        }
+
+        private void PrepareDuelTeam(List<PlayerController> team)
+        {
+            var field = team.Find(p => p != null && p.Role != FieldRole.Goalkeeper && p.Character != CharacterType.Generic);
+            if (field == null) field = team.Find(p => p != null && p.Role != FieldRole.Goalkeeper);
+            var keeper = team.Find(p => p != null && p.Role == FieldRole.Goalkeeper);
+            for (int i = team.Count - 1; i >= 0; i--)
+            {
+                var p = team[i];
+                if (p != null && (p == field || p == keeper)) continue;
+                if (p != null)
+                {
+                    if (p.Visual != null)
+                    {
+                        var v=p.Visual;
+                        foreach(var marker in new GameObject[] {v.controlledIndicator,v.possessionIndicator,v.flightIndicator,v.ultAttackIndicator,v.ultDefenseIndicator})
+                            if(marker!=null) marker.SetActive(false);
+                        if(v.shadow!=null) v.shadow.gameObject.SetActive(false);
+                        if(v.facingIndicator!=null) v.facingIndicator.gameObject.SetActive(false);
+                        if(v.roleLabel!=null) v.roleLabel.gameObject.SetActive(false);
+                        v.gameObject.SetActive(false);
+                    }
+                    p.gameObject.SetActive(false);
+                }
+                team.RemoveAt(i);
+            }
+            if (keeper != null)
+            {
+                keeper.SetHumanControlled(false);
+                keeper.ShirtNumber = 1;
+                keeper.ConfigureCharacter(CharacterType.Goro);
+            }
+            if (field != null) field.ShirtNumber = 10;
         }
 
 
@@ -113,7 +154,7 @@ namespace BeastSoccer.Core
             // is always the pressing MID so the featured opponent is visibly involved in defence.
             if (side == TeamSide.Away)
             {
-                if (special != null) special.FormationRole = TacticalRole.Presser;
+                if (special != null) special.FormationRole = DuelRules.Enabled ? TacticalRole.Rover : TacticalRole.Presser;
                 if (generics.Count > 0) generics[0].FormationRole = TacticalRole.Rover;
                 if (generics.Count > 1) generics[1].FormationRole = TacticalRole.Anchor;
             }
@@ -167,7 +208,7 @@ namespace BeastSoccer.Core
         public PlayerController SpecialFor(TeamSide side)
         {
             var team = side == TeamSide.Home ? HomeTeam : AwayTeam;
-            foreach (var p in team) if (p != null && p.Character != CharacterType.Generic) return p;
+            foreach (var p in team) if (p != null && p.Role != FieldRole.Goalkeeper && p.Character != CharacterType.Generic) return p;
             return null;
         }
 

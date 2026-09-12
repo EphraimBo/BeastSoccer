@@ -14,6 +14,8 @@ namespace BeastSoccer.Presentation
         private void Start()
         {
             LockToCustomBallModelIfPresent();
+            if (BeastSoccer.Core.DuelRules.Enabled && visualModel != null)
+                visualModel.localScale *= BeastSoccer.Core.DemoMatchRules.BallScale;
             lastPos = transform.position;
         }
 

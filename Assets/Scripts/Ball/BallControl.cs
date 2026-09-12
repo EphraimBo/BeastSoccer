@@ -20,6 +20,7 @@ namespace BeastSoccer.Ball
         public float LastKickTime { get; private set; } = -999f;
         public bool IsShot => LastKickType == KickType.Shot && Mode == BallMode.Free;
         public bool LastKickWasUltShot { get; private set; }
+        public bool LastShotEligible { get; private set; }
         public float VisualArcHeight { get; private set; }
         public float VisualArc01 { get; private set; }
         public float DribbleVisualBobHeight { get; private set; }
@@ -48,6 +49,7 @@ namespace BeastSoccer.Ball
             rb = GetComponent<Rigidbody2D>();
             rb.gravityScale = 0f;
             rb.interpolation = RigidbodyInterpolation2D.Interpolate;
+            rb.collisionDetectionMode = CollisionDetectionMode2D.Continuous;
             rb.linearDamping = GameConfig.Instance != null ? GameConfig.Instance.ballLinearDrag : 1.15f;
         }
 
@@ -102,6 +104,12 @@ namespace BeastSoccer.Ball
             pendingHumanPassReceiverUntil = 0f;
             pendingReceiverHardLock = false;
             Owner = p;
+            LastShotEligible = false;
+            VisualArcHeight = 0f;
+            arcPeak = 0f;
+            groundBouncesRemaining = 0;
+            if (p.Role == FieldRole.Goalkeeper)
+                p.SetKeeperHold(DuelRules.Enabled ? DemoMatchRules.KeeperHoldSeconds : GameConfig.Instance.keeperPossessionSeconds);
             LastTouch = p;
             LastKickType = KickType.None;
             LastKickWasUltShot = false;
@@ -161,6 +169,7 @@ namespace BeastSoccer.Ball
             LastTouch = kicker;
             LastKicker = kicker;
             LastKickType = type;
+            LastShotEligible = type == KickType.Shot && DuelRules.CanScoreFrom(kicker);
             LastKickWasUltShot = type == KickType.Shot && kicker.Ult != null && kicker.Ult.IsActive;
             LastKickTime = Time.time;
             // Possession play is direct-control football: on a user pass/lob, control transfers
@@ -180,12 +189,19 @@ namespace BeastSoccer.Ball
                 : 0f;
             // FIX26: lobbed passes/crosses and throw-ins are deliberately receiver-locked.
             // Ground passes retain the softer assist so they still feel free/physical.
-            pendingReceiverHardLock = targetedDistribution && type == KickType.Lob;
+            // Fast keeper throws need a landing target as well as launch speed. Otherwise the
+            // ball keeps travelling after passing the receiver and can clear the touchline.
+            pendingReceiverHardLock = targetedDistribution && type == KickType.Lob &&
+                (kicker.Role != FieldRole.Goalkeeper || DuelRules.Enabled);
             interceptionChecked.Clear();
             Owner = null;
             actionOwner = null;
             Mode = BallMode.Free;
             rb.bodyType = RigidbodyType2D.Dynamic;
+            bool fastKeeperOutlet = DuelRules.Enabled && kicker.Role == FieldRole.Goalkeeper && type == KickType.Lob;
+            // Keeper outlets have their own direct launch profile. Applying the global shot boost
+            // made the arc last longer and read like a hovering ball rather than a quick throw.
+            if (DuelRules.Enabled && !fastKeeperOutlet) force *= DemoMatchRules.BallSpeedBoost;
             rb.linearVelocity = direction * force;
             if (switchToReceiver && TeamManager.Instance != null)
                 TeamManager.Instance.SetHuman(intendedReceiver, false, true);
@@ -194,7 +210,21 @@ namespace BeastSoccer.Ball
             GameManager.Instance?.SetPossession(Possession.Loose);
             // A regular kickoff becomes live only when the centre pass actually leaves the foot.
             GameManager.Instance?.NotifyKickoffTaken(kicker, type);
-            StartVisualArc(visualArc, Mathf.Clamp(force / 10f, 0.35f, 1.5f));
+            if (fastKeeperOutlet)
+            {
+                float outletDistance = intendedReceiver != null
+                    ? Vector2.Distance(kicker.transform.position, intendedReceiver.transform.position)
+                    : 5f;
+                StartVisualArc(Mathf.Min(.34f, visualArc), Mathf.Clamp(outletDistance / Mathf.Max(7f, force), .34f, .58f));
+                groundBouncesRemaining = 0;
+                if (pendingReceiverHardLock)
+                    pendingHumanPassReceiverUntil = Mathf.Max(pendingHumanPassReceiverUntil, Time.time + arcDuration + .1f);
+                // Set the very first physics step too: a receiver near the keeper or touchline
+                // must not be overshot before FixedUpdate can begin steering.
+                if (pendingReceiverHardLock)
+                    rb.linearVelocity = (KeeperOutletLandingPoint(intendedReceiver.transform.position) - rb.position) / arcDuration;
+            }
+            else StartVisualArc(visualArc, Mathf.Clamp(force / 10f, 0.35f, 1.5f));
             GameManager.Instance?.NotifySetPieceTaken(kicker, type);
             return true;
         }
@@ -211,6 +241,7 @@ namespace BeastSoccer.Ball
 
         public void ForceReleaseAndStop()
         {
+            LastShotEligible = false;
             Owner = null;
             actionOwner = null;
             Mode = BallMode.Free;
@@ -266,6 +297,14 @@ namespace BeastSoccer.Ball
         private void FollowOwner()
         {
             if (Owner == null) { ForceReleaseAndStop(); return; }
+            if (DuelRules.Enabled && Owner.Role == FieldRole.Goalkeeper)
+            {
+                lastOwnerDir = new Vector2(TeamManager.Instance.AttackDirFor(Owner.Side), 0f);
+                VisualArcHeight = .85f;
+                DribbleVisualBobHeight = 0f;
+                rb.MovePosition((Vector2)Owner.transform.position + lastOwnerDir * .38f);
+                return;
+            }
             Vector2 dir = Owner.MoveFacing;
             if (dir.sqrMagnitude < 0.01f) dir = new Vector2(TeamManager.Instance.AttackDirFor(Owner.Side),0f);
             lastOwnerDir = dir.normalized;
@@ -339,7 +378,14 @@ namespace BeastSoccer.Ball
         {
             if (pendingHumanPassReceiver == null || Time.time > pendingHumanPassReceiverUntil || rb == null) return;
             if (pendingHumanPassReceiver.IsSuppressed || pendingHumanPassReceiver.Role == FieldRole.Goalkeeper) return;
-            Vector2 toTarget = (Vector2)pendingHumanPassReceiver.transform.position - rb.position;
+            Vector2 targetPosition = pendingHumanPassReceiver.transform.position;
+            if (IsKeeperOutlet) targetPosition = KeeperOutletLandingPoint(targetPosition);
+            Vector2 toTarget = targetPosition - rb.position;
+            if (pendingReceiverHardLock && IsKeeperOutlet && toTarget.sqrMagnitude < .0004f)
+            {
+                rb.linearVelocity = Vector2.zero;
+                return;
+            }
             if (toTarget.sqrMagnitude < 0.0004f) return;
 
             if (pendingReceiverHardLock && LastKickType == KickType.Lob)
@@ -409,6 +455,8 @@ namespace BeastSoccer.Ball
             {
                 var p = hit != null ? hit.GetComponentInParent<PlayerController>() : null;
                 if (p == null || p.IsSuppressed || p.IsActionLocked || p.IsWingBlocking || p.IsFlying) continue;
+                // All catches go through the save zone, including its one-roll miss cooldown.
+                if (DuelRules.Enabled && p.Role == FieldRole.Goalkeeper) continue;
                 if (pendingReceiverHardLock && intendedWindow && p != pendingHumanPassReceiver) continue;
                 if (GameManager.Instance != null && GameManager.Instance.Mode == GameMode.Defending && p.Side == TeamSide.Home && p.Role != FieldRole.Goalkeeper) continue;
                 if (p.Role != FieldRole.Goalkeeper && LastKickType == KickType.Lob && !CanOutfieldControlLob(p)) continue;
@@ -484,11 +532,22 @@ namespace BeastSoccer.Ball
             if (pendingReceiverHardLock && pendingHumanPassReceiver != null &&
                 Time.time <= pendingHumanPassReceiverUntil && !pendingHumanPassReceiver.IsSuppressed)
             {
-                rb.position = pendingHumanPassReceiver.transform.position;
-                rb.linearVelocity = Vector2.zero;
                 var receiver = pendingHumanPassReceiver;
+                Vector2 landing = IsKeeperOutlet
+                    ? KeeperOutletLandingPoint(receiver.transform.position)
+                    : (Vector2)receiver.transform.position;
+                rb.position = landing;
+                rb.linearVelocity = Vector2.zero;
                 pendingReceiverHardLock = false;
-                receiver.GainBall();
+                pendingHumanPassReceiver = null;
+                pendingHumanPassReceiverUntil = 0f;
+                arcPeak = 0f;
+                groundBouncesRemaining = 0;
+                // If a receiver cannot collect (e.g. airborne or beyond the safe landing
+                // margin), leave a grounded loose ball in play rather than teleport it out.
+                if (!IsKeeperOutlet || (!receiver.IsFlying && !receiver.IsWingBlocking &&
+                    Vector2.Distance(receiver.transform.position, landing) <= GameConfig.Instance.receiveRadius))
+                    receiver.GainBall();
                 return;
             }
 
@@ -508,6 +567,21 @@ namespace BeastSoccer.Ball
 
             arcPeak = 0f;
             groundBouncesRemaining = 0;
+        }
+
+        private bool IsKeeperOutlet => DuelRules.Enabled && LastKickType == KickType.Lob &&
+            LastKicker != null && LastKicker.Role == FieldRole.Goalkeeper;
+
+        private static Vector2 KeeperOutletLandingPoint(Vector2 target)
+        {
+            var config = GameConfig.Instance;
+            if (config == null) return target;
+            // Keep the whole enlarged visual ball inside the pitch at landing.
+            float margin = Mathf.Max(.75f, config.ballVisualRadius * DemoMatchRules.BallScale + .20f);
+            float halfLength = Mathf.Max(.1f, config.pitchLength * .5f - margin);
+            float halfWidth = Mathf.Max(.1f, config.pitchWidth * .5f - margin);
+            return new Vector2(Mathf.Clamp(target.x, -halfLength, halfLength),
+                Mathf.Clamp(target.y, -halfWidth, halfWidth));
         }
 
         private static Vector2 SafeDir(Vector2 dir, Vector2 fallback)

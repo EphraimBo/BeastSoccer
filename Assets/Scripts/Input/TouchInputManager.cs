@@ -92,6 +92,7 @@ namespace BeastSoccer.Input
         public void OnPrimary()
         {
             var h = Human; if (h == null) return;
+            if (DuelRules.Enabled) { if (h.HasBall) OnShoot(); else OnTackle(); return; }
             if (GameManager.Instance != null && GameManager.Instance.Mode == BeastSoccer.Data.GameMode.Defending) { OnTackle(); return; }
             if (h.HasBall || TeamManager.Instance.BallOwner(BeastSoccer.Data.TeamSide.Home) != null || (BeastSoccer.Ball.BallControl.Instance != null && BeastSoccer.Ball.BallControl.Instance.IsRecentKickBy(BeastSoccer.Data.TeamSide.Home, BeastSoccer.Data.GameConfig.Instance.possessionUiFlightGraceSeconds))) OnShoot();
             else OnTackle();
@@ -122,9 +123,21 @@ namespace BeastSoccer.Input
         }
         public void OnThrough() => Human?.ThroughBall();
         public void OnLob() => Human?.Lob();
-        public void OnUltimate() => Human?.Ult?.TryActivate();
+        public void OnUltimate()
+        {
+            var ult = Human != null ? Human.Ult : null;
+            if (ult == null) return;
+            if (DuelRules.Enabled && ult.IsActive) ult.TrySpecialAction();
+            else ult.TryActivate();
+        }
         public void OnFly() => Human?.Ult?.TrySpecialAction();
-        public void OnTackle() => Human?.Defense?.Tackle();
+        public void OnTackle()
+        {
+            var h = Human;
+            if (h == null || h.Defense == null) return;
+            GameFeel.Shake(0.035f);
+            h.Defense.Tackle();
+        }
         public void OnIntercept() => Human?.Defense?.Intercept();
         public void OnJockey() => Human?.Defense?.Jockey(Human != null ? Human.MoveFacing : Vector2.right);
         public void OnSwitch() => ControlSwitcher.Instance?.SwitchToClosestToBall();

@@ -111,7 +111,7 @@ namespace BeastSoccer.Presentation
             }
             if (roleLabel != null)
             {
-                roleLabel.gameObject.SetActive(true);
+                roleLabel.gameObject.SetActive(GameConfig.Instance != null && GameConfig.Instance.showDebugPlayerIndicators);
                 string displayName;
                 if (source.Character != CharacterType.Generic) displayName = source.Character.ToString().ToUpperInvariant();
                 else if (source.Role == FieldRole.Goalkeeper) displayName = "KEEPER " + source.ShirtNumber;
@@ -184,7 +184,9 @@ namespace BeastSoccer.Presentation
                 authoredLocalScale = transform.localScale;
                 authoredScaleCaptured = true;
             }
-            transform.localScale = authoredLocalScale * (source.Character == CharacterType.Volt ? 0.90f : 1f);
+            float characterScale = source.Character == CharacterType.Volt ? 0.90f : 1f;
+            float duelScale = DuelRules.Enabled ? DemoMatchRules.PlayerScale : 1f;
+            transform.localScale = authoredLocalScale * characterScale * duelScale;
             visualLibrary.Apply(source.Character, source.Side, spriteRenderer, animator, animationDriver);
         }
 

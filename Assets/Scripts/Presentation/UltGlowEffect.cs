@@ -7,7 +7,7 @@ namespace BeastSoccer.Presentation
     /// FIX41: visible sprite-free ult aura. Uses enlarged echo silhouettes plus a small procedural
     /// energy particle field. No authored glow sprites/materials are required.
     /// </summary>
-    [DefaultExecutionOrder(1100)]
+    [DefaultExecutionOrder(1700)]
     public class UltGlowEffect : MonoBehaviour
     {
         public PlayerVisualProxy visual;
@@ -126,6 +126,7 @@ namespace BeastSoccer.Presentation
             velocity.enabled = true;
             velocity.y = new ParticleSystem.MinMaxCurve(0.18f, 0.48f);
             velocity.x = new ParticleSystem.MinMaxCurve(-0.08f, 0.08f);
+            velocity.z = new ParticleSystem.MinMaxCurve(0f, 0f);
 
             var colorLife = energy.colorOverLifetime;
             colorLife.enabled = true;

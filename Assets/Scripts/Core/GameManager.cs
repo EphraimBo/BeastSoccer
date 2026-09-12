@@ -51,7 +51,14 @@ namespace BeastSoccer.Core
         {
             ApplyRuntimeSetup();
             if (OpponentRandom) RandomizeOpponent();
+            if (DuelRules.Enabled)
+            {
+                Mode = GameMode.Regular;
+                PlayerCharacter = DuelRules.Outfielder(PlayerCharacter, CharacterType.Leo);
+                OpponentCharacter = DuelRules.Outfielder(OpponentCharacter, CharacterType.Volt);
+            }
             TeamManager.Instance?.ApplyCharacterSelections(PlayerCharacter, OpponentCharacter);
+            if (DuelRules.Enabled) gameObject.AddComponent<BeastSoccer.Presentation.DuelPitchPresentation>();
             MatchTimer.Instance?.PauseClock();
             if (Mode == GameMode.Defending) RoundReset.Instance?.ResetDefendingRound();
             else RoundReset.Instance?.ResetForKickoff(TeamSide.Home);
@@ -125,6 +132,27 @@ namespace BeastSoccer.Core
 
         private IEnumerator SetPieceRoutine(SetPieceType type, TeamSide restartSide, Vector2 spot)
         {
+            if (DuelRules.Enabled)
+            {
+                yield return new WaitForSeconds(.65f);
+                // A solo outfielder cannot pass a kickoff/corner to a second outfielder.
+                // Resume with possession; goal kicks use the same catch-and-throw keeper flow.
+                if (type == SetPieceType.GoalKick)
+                {
+                    RoundReset.Instance?.PrepareSetPiece(type, restartSide, spot);
+                    RoundReset.Instance?.ClearPreparedSetPiece();
+                    var keeper = TeamManager.Instance?.GoalkeeperFor(restartSide);
+                    if (keeper != null) keeper.SetKeeperHold(GameConfig.Instance.keeperPossessionSeconds);
+                    TeamManager.Instance?.SetHuman(TeamManager.Instance.SpecialFor(TeamSide.Home));
+                }
+                else RoundReset.Instance?.RestartNear(spot, restartSide);
+                CurrentSetPieceType = SetPieceType.None;
+                preparedSetPieceTaker = null;
+                awaitingSetPieceKick = false;
+                SetPhaseInternal(MatchPhase.Playing);
+                MatchTimer.Instance?.ResumeClock();
+                yield break;
+            }
             float setup = GameConfig.Instance != null ? GameConfig.Instance.setPieceSetupDelay : 1.65f;
             float ready = GameConfig.Instance != null ? GameConfig.Instance.setPieceReadyDelay : 0.75f;
             yield return new WaitForSeconds(setup);
@@ -202,6 +230,7 @@ namespace BeastSoccer.Core
 
         public void NotifySaveMade()
         {
+            if (DuelRules.Enabled) return; // A catch remains live possession, never a round reset.
             KickoffReady = false;
             MatchTimer.Instance?.PauseClock();
             BeastSoccer.Ball.BallControl.Instance?.ForceReleaseAndStop();
@@ -234,7 +263,7 @@ namespace BeastSoccer.Core
             yield return new WaitForSeconds(GameConfig.Instance.kickoffDelay);
             RoundReset.Instance?.StabilizeBeforePlay();
             yield return new WaitForFixedUpdate();
-            if (Mode == GameMode.Defending)
+            if (Mode == GameMode.Defending || DuelRules.Enabled)
             {
                 KickoffReady = false;
                 RoundReset.Instance?.ReleaseKickoffLock();
@@ -362,7 +391,7 @@ namespace BeastSoccer.Core
 
         private void RandomizeOpponent()
         {
-            var choices = new[] { CharacterType.Leo, CharacterType.Goro, CharacterType.Volt };
+            var choices = DuelRules.Enabled ? new[] { CharacterType.Leo, CharacterType.Volt } : new[] { CharacterType.Leo, CharacterType.Goro, CharacterType.Volt };
             OpponentCharacter = choices[Random.Range(0, choices.Length)];
         }
     }

@@ -10,7 +10,7 @@ namespace BeastSoccer.UI
     {
         public static GameMode Mode = GameMode.Regular;
         public static CharacterType PlayerCharacter = CharacterType.Leo;
-        public static CharacterType OpponentCharacter = CharacterType.Goro;
+        public static CharacterType OpponentCharacter = CharacterType.Volt;
         public static bool OpponentRandom = false;
         public static bool OpenCharacterSelectOnLoad = false;
         public static bool HasExplicitSelection = false;
@@ -26,6 +26,7 @@ namespace BeastSoccer.UI
         private void Start()
         {
             ApplyPrototypeMenuTweaks();
+            ApplyMenuTypography();
             var overhaul = GetComponent<BeastMenuOverhaul>();
             if (overhaul != null)
             {
@@ -40,6 +41,64 @@ namespace BeastSoccer.UI
                 Show(characterPanel);
             }
             else Show(modePanel);
+        }
+
+        private static Font displayFont;
+
+        private void ApplyMenuTypography()
+        {
+            Font font = GetDisplayFont(26);
+            if (font == null) return;
+            foreach (var label in GetComponentsInChildren<Text>(true))
+            {
+                if (label == null) continue;
+                bool longCopy = !string.IsNullOrEmpty(label.text) && (label.text.Length > 30 || label.text.Contains("\n"));
+                label.font = font;
+                label.fontStyle = FontStyle.Normal;
+                label.resizeTextForBestFit = true;
+                if (!longCopy)
+                {
+                    label.fontSize = Mathf.Max(label.fontSize, 24);
+                    label.alignment = TextAnchor.MiddleCenter;
+                }
+                else
+                {
+                    label.fontSize = Mathf.Max(label.fontSize, 20);
+                }
+
+                var outline = label.GetComponent<Outline>();
+                if (outline == null) outline = label.gameObject.AddComponent<Outline>();
+                outline.effectColor = new Color(0f, 0f, 0f, 0.85f);
+                outline.effectDistance = longCopy ? new Vector2(0.7f, -0.7f) : new Vector2(0.9f, -0.9f);
+
+                var shadow = label.GetComponent<Shadow>();
+                if (shadow == null) shadow = label.gameObject.AddComponent<Shadow>();
+                shadow.effectColor = new Color(0f, 0f, 0f, 0.35f);
+                shadow.effectDistance = new Vector2(0f, -1.6f);
+            }
+        }
+
+        private static Font GetDisplayFont(int size)
+        {
+            if (displayFont != null) return displayFont;
+            try
+            {
+                displayFont = Font.CreateDynamicFontFromOSFont(new[]
+                {
+                    "Trebuchet MS", "Verdana", "Arial"
+                }, size);
+            }
+            catch
+            {
+                displayFont = null;
+            }
+
+            if (displayFont == null)
+            {
+                try { displayFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"); }
+                catch { displayFont = Resources.GetBuiltinResource<Font>("Arial.ttf"); }
+            }
+            return displayFont;
         }
 
         public void OnPlay() => Show(modePanel);
@@ -60,11 +119,11 @@ namespace BeastSoccer.UI
         }
 
         public void OnPickLeo() { MatchSetup.PlayerCharacter = CharacterType.Leo; Show(opponentPanel); }
-        public void OnPickGoro() { MatchSetup.PlayerCharacter = CharacterType.Goro; Show(opponentPanel); }
+        public void OnPickGoro() { } // Goro is reserved for the two AI goalkeepers.
         public void OnPickVolt() { MatchSetup.PlayerCharacter = CharacterType.Volt; Show(opponentPanel); }
 
         public void OnOpponentLeo() { SetOpp(CharacterType.Leo); }
-        public void OnOpponentGoro() { SetOpp(CharacterType.Goro); }
+        public void OnOpponentGoro() { }
         public void OnOpponentVolt() { SetOpp(CharacterType.Volt); }
         public void OnOpponentRandom() { MatchSetup.OpponentRandom = true; StartMatch(); }
 

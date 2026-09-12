@@ -315,6 +315,14 @@ namespace BeastSoccer.Core
             foreach (var player in players)
             {
                 if (player == null) continue;
+                if (DuelRules.Enabled)
+                {
+                    int dir = TeamManager.Instance.AttackDirFor(player.Side);
+                    kickoffLocks[player] = player.Role == FieldRole.Goalkeeper
+                        ? new Vector2(-dir * (GameConfig.Instance.pitchLength * .5f - GameConfig.Instance.keeperGoalOffset), 0f)
+                        : new Vector2(-dir * 3.2f, 0f);
+                    continue;
+                }
                 int index = SpawnIndexFor(player);
                 if (index < 0 || index >= spawns.Length || spawns[index] == null) continue;
 

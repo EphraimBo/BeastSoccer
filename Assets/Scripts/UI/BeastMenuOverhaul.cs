@@ -47,6 +47,8 @@ namespace BeastSoccer.UI
                 return;
             }
 
+            DuelMenuLayout.Install(this);
+
             MatchSetup.Mode = GameMode.Regular;
             hasPlayerSelection = false;
             hasRivalSelection = false;
@@ -90,15 +92,17 @@ namespace BeastSoccer.UI
 
         public void PickVolt() { selectedPlayer = CharacterType.Volt; hasPlayerSelection = true; ApplyPlayerSelection(); }
         public void PickLeo()  { selectedPlayer = CharacterType.Leo;  hasPlayerSelection = true; ApplyPlayerSelection(); }
-        public void PickGoro() { selectedPlayer = CharacterType.Goro; hasPlayerSelection = true; ApplyPlayerSelection(); }
+        public void PickGoro() { }
 
         public void RivalVolt() { selectedRival = CharacterType.Volt; hasRivalSelection = true; ApplyRivalSelection(); }
         public void RivalLeo()  { selectedRival = CharacterType.Leo;  hasRivalSelection = true; ApplyRivalSelection(); }
-        public void RivalGoro() { selectedRival = CharacterType.Goro; hasRivalSelection = true; ApplyRivalSelection(); }
+        public void RivalGoro() { }
 
         public void StartSelectedMatch()
         {
             if (!hasPlayerSelection || !hasRivalSelection) return;
+            selectedPlayer = BeastSoccer.Core.DuelRules.Outfielder(selectedPlayer, CharacterType.Volt);
+            selectedRival = BeastSoccer.Core.DuelRules.Outfielder(selectedRival, CharacterType.Leo);
             if (menu == null) menu = GetComponent<MainMenuUI>();
             if (menu == null) return;
 
@@ -137,7 +141,7 @@ namespace BeastSoccer.UI
             if (!hasPlayerSelection)
             {
                 if (infoTitle) infoTitle.text = "SELECT YOUR BEAST";
-                if (infoBody) infoBody.text = "Choose Volt, Leo or Goro.";
+                if (infoBody) infoBody.text = "Choose Volt or Leo.\n\nGoro guards both goals.\n\nAGUILAR\nOrange home kit\n\nALIANZO\nBlue away kit";
             }
             else ApplyPlayerSelection();
         }

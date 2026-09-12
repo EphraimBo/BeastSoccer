@@ -1,0 +1,6 @@
+{
+  "name": "BeastSoccer.Runtime",
+  "rootNamespace": "BeastSoccer",
+  "references": ["UnityEngine.UI"],
+  "autoReferenced": true
+}

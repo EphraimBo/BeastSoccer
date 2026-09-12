@@ -63,7 +63,7 @@ namespace BeastSoccer.Core
             DisplayMinutes = Mathf.FloorToInt(footballSeconds / 60f);
             DisplaySeconds = Mathf.FloorToInt(footballSeconds % 60f);
 
-            if (!halftimeTriggered && ElapsedTotal >= total * 0.5f)
+            if (!DuelRules.Enabled && !halftimeTriggered && ElapsedTotal >= total * 0.5f)
             {
                 halftimeTriggered = true;
                 ClockRunning = false;

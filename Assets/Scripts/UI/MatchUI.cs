@@ -35,8 +35,12 @@ namespace BeastSoccer.UI
 
         private void OnEnable() => Bind();
 
+        private static Font menuDisplayFont;
+
         private void Start()
         {
+            ApplyOverlayMenuTypography();
+            DuelHud.Install(this);
             ConfigureUltChargeMeter();
             if (ultMeterFill != null && ultMeterFill.rectTransform != null)
                 ultMeterMaxWidth = Mathf.Max(1f, ultMeterFill.rectTransform.sizeDelta.x);
@@ -52,6 +56,61 @@ namespace BeastSoccer.UI
             }
             if (GameManager.Instance != null) Phase(GameManager.Instance.Phase);
             RefreshActionContext(true);
+        }
+
+        private void ApplyOverlayMenuTypography()
+        {
+            Font font = GetOverlayMenuFont(28);
+            if (font == null) return;
+            string[] panelNames = { "PausePanel", "FullTimePanel", "HalfTimePanel" };
+            foreach (string panelName in panelNames)
+            {
+                Transform panel = transform.Find(panelName);
+                if (panel == null) continue;
+                foreach (var label in panel.GetComponentsInChildren<Text>(true))
+                {
+                    if (label == null) continue;
+                    bool isTitle = panelName == "PausePanel" && label.text == "PAUSED";
+                    label.font = font;
+                    label.fontStyle = isTitle ? FontStyle.Bold : FontStyle.Normal;
+                    label.resizeTextForBestFit = true;
+                    label.fontSize = Mathf.Max(label.fontSize, isTitle ? 38 : 24);
+                    label.alignment = TextAnchor.MiddleCenter;
+
+                    var outline = label.GetComponent<Outline>();
+                    if (outline == null) outline = label.gameObject.AddComponent<Outline>();
+                    outline.effectColor = new Color(0f, 0f, 0f, 0.9f);
+                    outline.effectDistance = isTitle ? new Vector2(1.1f, -1.1f) : new Vector2(0.8f, -0.8f);
+
+                    var shadow = label.GetComponent<Shadow>();
+                    if (shadow == null) shadow = label.gameObject.AddComponent<Shadow>();
+                    shadow.effectColor = new Color(0f, 0f, 0f, 0.45f);
+                    shadow.effectDistance = new Vector2(0f, -1.6f);
+                }
+            }
+        }
+
+        private static Font GetOverlayMenuFont(int size)
+        {
+            if (menuDisplayFont != null) return menuDisplayFont;
+            try
+            {
+                menuDisplayFont = Font.CreateDynamicFontFromOSFont(new[]
+                {
+                    "Trebuchet MS", "Verdana", "Arial"
+                }, size);
+            }
+            catch
+            {
+                menuDisplayFont = null;
+            }
+
+            if (menuDisplayFont == null)
+            {
+                try { menuDisplayFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"); }
+                catch { menuDisplayFont = Resources.GetBuiltinResource<Font>("Arial.ttf"); }
+            }
+            return menuDisplayFont;
         }
 
         private void ConfigureUltChargeMeter()
@@ -99,7 +158,7 @@ namespace BeastSoccer.UI
             {
                 timerText.text = MatchTimer.Instance.InGoldenGoal
                     ? $"GG {Mathf.CeilToInt(MatchTimer.Instance.GoldenGoalRemaining):00}"
-                    : $"{MatchTimer.Instance.DisplayMinutes:00}:{MatchTimer.Instance.DisplaySeconds:00}";
+                    : DuelRules.Enabled ? FormatRemaining() : $"{MatchTimer.Instance.DisplayMinutes:00}:{MatchTimer.Instance.DisplaySeconds:00}";
                 timerText.color = MatchTimer.Instance.IsFinalStretch ? new Color(1f,.72f,.15f,1f) : Color.white;
             }
 
@@ -123,6 +182,7 @@ namespace BeastSoccer.UI
 
         private void RefreshActionContext(bool force)
         {
+            if (DuelRules.Enabled) return; // DuelHud owns the single SHOOT/TACKLE button.
             if (GameManager.Instance == null || TeamManager.Instance == null) return;
 
             if (GameManager.Instance.Phase == MatchPhase.Kickoff)
@@ -270,7 +330,7 @@ namespace BeastSoccer.UI
             bool controllingSpecial = special != null && human == special;
             bool selectable = GameManager.Instance != null &&
                               GameManager.Instance.Phase == MatchPhase.Playing &&
-                              controllingSpecial && !active && charge >= 0.999f;
+                              controllingSpecial && ((!active && charge >= 0.999f) || (DuelRules.Enabled && active && ult != null && ult.CanTriggerSpecialAction));
 
             if (ultimateButton != null)
             {
@@ -278,12 +338,12 @@ namespace BeastSoccer.UI
                 ultimateButton.interactable = selectable;
                 if (ultButtonBaseScale == UnityEngine.Vector3.zero)
                     ultButtonBaseScale = ultimateButton.transform.localScale;
-                ultimateButton.transform.localScale = ultButtonBaseScale * (selectable ? 1.25f : 1f);
+                ultimateButton.transform.localScale = ultButtonBaseScale * (selectable ? 1.06f : 1f);
             }
 
             // Only two visual states: selectable / not selectable. No percentages, READY or ACTIVE text.
             if (ultimateLabel != null)
-                ultimateLabel.text = "ULT";
+                ultimateLabel.text = DuelRules.Enabled && active && human != null && human.Character == CharacterType.Volt ? (ult.TeamHasPossession() ? "FLY" : "BLOCK") : "ULT";
 
             if (ultButtonImage != null)
             {
@@ -301,6 +361,7 @@ namespace BeastSoccer.UI
 
         private void RefreshSpecialAction()
         {
+            if (DuelRules.Enabled) { if (flyButton) flyButton.gameObject.SetActive(false); return; }
             if (flyButton == null) return;
             var human = TeamManager.Instance != null ? TeamManager.Instance.CurrentHuman() : null;
             var ult = human != null ? human.Ult : null;
@@ -430,6 +491,7 @@ namespace BeastSoccer.UI
 
         private void RefreshSwitch()
         {
+            if (DuelRules.Enabled) { if (switchButton) switchButton.gameObject.SetActive(false); return; }
             if (switchButton == null || GameManager.Instance == null) return;
             bool allowed = GameManager.Instance.Phase == MatchPhase.Playing && (ControlSwitcher.Instance == null || !ControlSwitcher.Instance.IsKeeperSequence);
             switchButton.interactable = allowed;
@@ -447,6 +509,11 @@ namespace BeastSoccer.UI
         }
 
         private static void SetLabel(Text t,string value){ if(t!=null)t.text=value; }
+        private static string FormatRemaining()
+        {
+            int remaining = Mathf.CeilToInt(Mathf.Max(0, GameConfig.Instance.matchRealSeconds - MatchTimer.Instance.ElapsedTotal));
+            return $"{remaining / 60:00}:{remaining % 60:00}";
+        }
         private static void SetButtonColor(Button b,Color c){ if(b!=null && b.targetGraphic is Image img) img.color=c; }
 
         private void UpdateScore(int home, int away)

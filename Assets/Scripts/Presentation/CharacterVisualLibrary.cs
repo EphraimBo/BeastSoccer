@@ -10,6 +10,46 @@ namespace BeastSoccer.Presentation
 
         public void Apply(CharacterType type, TeamSide side, SpriteRenderer renderer, Animator animator, CharacterAnimationDriver driver)
         {
+            if (type != CharacterType.Generic && renderer != null)
+            {
+                // Approved PNGs own the sprite. Stop legacy animation/material writers rather
+                // than loading them and overwriting their output every frame.
+                if (animator != null)
+                {
+                    animator.enabled = false;
+                    animator.runtimeAnimatorController = null;
+                }
+                if (driver != null)
+                {
+                    driver.ConfigureDirectionalPrototype(type, null);
+                    driver.RefreshParameters();
+                }
+                DisableLegacy<TeamKitVisual>();
+                DisableLegacy<GoroKeeperVisual>();
+                DisableLegacy<GoroSpriteOverride>();
+                DisableLegacy<VoltUltSpriteOverride>();
+                var approvedArt = GetComponent<DemoCharacterArtV8>();
+                if (approvedArt == null) approvedArt = gameObject.AddComponent<DemoCharacterArtV8>();
+                approvedArt.enabled = true;
+                approvedArt.Configure(GetComponent<PlayerVisualProxy>(), renderer);
+                // In the shipped scenes the sprite and visual proxy share a Transform:
+                // V8 ultimately wrote 1 for outfielders and 1.2 for Goro. Scale those
+                // effective values exactly once; repeated ApplyCharacter calls cannot stack it.
+                renderer.transform.localScale = Vector3.one * (type == CharacterType.Goro ? 1.2f : 1f)
+                    * BeastSoccer.Core.DemoMatchRules.ArtworkScaleBoost;
+                renderer.sprite = DemoCharacterArtV8.First(type, side,
+                    type == CharacterType.Goro ? "Idle_Ready_ThreeQuarter" : "Run_Side");
+                renderer.color = Color.white;
+                renderer.sortingOrder = 50;
+                renderer.spriteSortPoint = SpriteSortPoint.Pivot;
+                var glow = GetComponent<UltGlowEffect>();
+                if (glow == null) glow = gameObject.AddComponent<UltGlowEffect>();
+                glow.visual = GetComponent<PlayerVisualProxy>();
+                glow.targetRenderer = renderer;
+                glow.character = type;
+                if (placeholderToDisable != null) placeholderToDisable.SetActive(false);
+                return;
+            }
             if(database==null) database=Object.FindAnyObjectByType<CharacterArtDatabase>();
             if(database==null) return;
             RuntimeAnimatorController controller=null;Sprite idle=null;
@@ -23,6 +63,15 @@ namespace BeastSoccer.Presentation
             if(animator!=null && controller!=null)animator.runtimeAnimatorController=controller;
             if(renderer!=null)
             {
+                var kit = GetComponent<TeamKitVisual>();
+                if (kit == null) kit = gameObject.AddComponent<TeamKitVisual>();
+                kit.target = renderer; kit.character = type; kit.side = side;
+                var keeperArt = GetComponent<GoroKeeperVisual>();
+                if (keeperArt == null) keeperArt = gameObject.AddComponent<GoroKeeperVisual>();
+                keeperArt.visual = GetComponent<PlayerVisualProxy>();
+                var approvedArt = GetComponent<DemoCharacterArtV8>();
+                if (approvedArt == null) approvedArt = gameObject.AddComponent<DemoCharacterArtV8>();
+                approvedArt.Configure(GetComponent<PlayerVisualProxy>(), renderer);
                 if(idle!=null)renderer.sprite=idle;
                 renderer.color=type==CharacterType.Generic?(side==TeamSide.Home?new Color(.55f,.72f,1f,1f):new Color(1f,.58f,.58f,1f)):Color.white;
                 renderer.sortingOrder=50; // Sprite presentation stays visually above debug ground indicators.
@@ -88,6 +137,11 @@ namespace BeastSoccer.Presentation
             // regardless of whether its current art comes from an Animator Controller or a sprite override.
             if (placeholderToDisable != null)
                 placeholderToDisable.SetActive(type == CharacterType.Generic);
+        }
+        private void DisableLegacy<T>() where T : Behaviour
+        {
+            var component = GetComponent<T>();
+            if (component != null) component.enabled = false;
         }
     }
 }

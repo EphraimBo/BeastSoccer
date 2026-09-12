@@ -46,6 +46,9 @@ namespace BeastSoccer.Player
         public float SprintStamina01 { get; private set; } = 1f;
         public bool IsSprintExhausted { get; private set; }
         public Vector2 CurrentVelocity => rb != null ? rb.linearVelocity : Vector2.zero;
+        public KickType VisualKickType { get; private set; } = KickType.None;
+        public float VisualKickStartedAt { get; private set; } = -999f;
+        public float VisualKickUntil { get; private set; } = -999f;
         public float ImpactVisualHeight
         {
             get
@@ -346,6 +349,11 @@ namespace BeastSoccer.Player
             Defense?.CancelForControlChange();
         }
 
+        private float UltMoveSpeedMultiplier()
+        {
+            return Ult != null && Ult.IsActive ? DemoMatchRules.UltMovementMultiplier : 1f;
+        }
+
         private void ApplyMovement()
         {
             var cfg = GameConfig.Instance;
@@ -357,7 +365,8 @@ namespace BeastSoccer.Player
             // bounded, timed, and owns movement for its three-second window.
             if (IsGoroCharging)
             {
-                Vector2 chargeTarget = goroChargeDirection * cfg.goroChargeSpeed * cfg.gameplayPaceMultiplier + externalPushVelocity;
+                float ultMoveSpeed = UltMoveSpeedMultiplier();
+                Vector2 chargeTarget = goroChargeDirection * cfg.goroChargeSpeed * cfg.gameplayPaceMultiplier * ultMoveSpeed + externalPushVelocity;
                 if (Time.time >= nextGoroChargeShake)
                 {
                     nextGoroChargeShake = Time.time + Mathf.Max(0.08f, cfg.goroChargeShakeInterval);
@@ -365,7 +374,7 @@ namespace BeastSoccer.Player
                 }
                 rb.linearVelocity = Vector2.MoveTowards(rb.linearVelocity, chargeTarget, cfg.acceleration * 2.4f * Time.fixedDeltaTime);
                 externalPushVelocity = Vector2.MoveTowards(externalPushVelocity, Vector2.zero, cfg.externalPushDecay * Time.fixedDeltaTime);
-                float cap = cfg.goroChargeSpeed * cfg.gameplayPaceMultiplier * 1.12f;
+                float cap = cfg.goroChargeSpeed * cfg.gameplayPaceMultiplier * ultMoveSpeed * 1.12f;
                 if (rb.linearVelocity.sqrMagnitude > cap * cap) rb.linearVelocity = Vector2.ClampMagnitude(rb.linearVelocity, cap);
                 ResolveGoroChargeContacts();
                 return;
@@ -386,7 +395,7 @@ namespace BeastSoccer.Player
             float ramp = rampSeconds <= 0f ? 99f : Time.fixedDeltaTime / rampSeconds;
             sprintBlend = Mathf.MoveTowards(sprintBlend, targetSprint, ramp);
 
-            float ultSpeed = Ult != null ? Ult.SpeedMultiplier : 1f;
+            float ultSpeed = UltMoveSpeedMultiplier();
             float wingSpeed = 1f; // FIX32 BLOCK keeps Volt on normal ground movement speed.
             float speed = cfg.baseMoveSpeed * cfg.gameplayPaceMultiplier * baseSpeed * ultSpeed * externalSpeedMultiplier * wingSpeed;
             speed *= Mathf.Lerp(1f, cfg.sprintMultiplier, sprintBlend);
@@ -440,7 +449,7 @@ namespace BeastSoccer.Player
                 float drainDistance = cfg.sprintStaminaDrainDistance > 0.1f
                     ? cfg.sprintStaminaDrainDistance
                     : Mathf.Max(1f, cfg.pitchLength);
-                float ultSpeed = Ult != null ? Mathf.Max(1f, Ult.SpeedMultiplier) : 1f;
+                float ultSpeed = UltMoveSpeedMultiplier();
                 float maxSprintTravelSpeed = cfg.baseMoveSpeed * cfg.gameplayPaceMultiplier * baseSpeed * cfg.sprintMultiplier * ultSpeed * Mathf.Max(1f, externalSpeedMultiplier);
                 float actualSprintSpeed = Mathf.Min(rb.linearVelocity.magnitude, maxSprintTravelSpeed);
                 float distanceThisStep = actualSprintSpeed * Time.fixedDeltaTime;
@@ -466,7 +475,7 @@ namespace BeastSoccer.Player
         private void ClampVelocityToLegalMaximum()
         {
             if (GameConfig.Instance == null || rb == null || IsFlying) return;
-            float ultSpeed = Ult != null ? Mathf.Max(1f, Ult.SpeedMultiplier) : 1f;
+            float ultSpeed = UltMoveSpeedMultiplier();
             float wingSpeed = 1f; // FIX32 BLOCK keeps Volt on normal ground movement speed.
             float maxLegal = GameConfig.Instance.baseMoveSpeed * GameConfig.Instance.gameplayPaceMultiplier * baseSpeed * GameConfig.Instance.sprintMultiplier * ultSpeed * Mathf.Max(1f, externalSpeedMultiplier) * wingSpeed;
             maxLegal *= GameConfig.Instance.hardSpeedCapMultiplier;
@@ -569,6 +578,7 @@ namespace BeastSoccer.Player
 
         public void Shoot()
         {
+            if (DuelRules.Enabled && !DuelRules.CanScoreFrom(this)) return;
             if (!HasBall) return;
             if (!CanKick(KickType.Shot)) return;
             StartKick(KickType.Shot, null, ShotDirection());
@@ -672,11 +682,19 @@ namespace BeastSoccer.Player
                 : type == KickType.Through ? GameConfig.Instance.throughContactSeconds
                 : type == KickType.Lob ? GameConfig.Instance.lobContactSeconds
                 : GameConfig.Instance.passContactSeconds;
+            if (DuelRules.Enabled)
+            {
+                if (type == KickType.Shot) contactDelay = 0.14f;
+                else if (type == KickType.Lob && Role == FieldRole.Goalkeeper) contactDelay = 0.12f;
+            }
             if (BallControl.Instance == null || !BallControl.Instance.BeginAction(this, aim, contactDelay)) yield break;
 
             // IMPORTANT: kicking no longer locks movement. The player keeps their current run/turn
             // through the contact animation; kickBusy only prevents stacking another gameplay action.
             kickBusy = true;
+            VisualKickType = type;
+            VisualKickStartedAt = Time.time;
+            VisualKickUntil = Time.time + (Role == FieldRole.Goalkeeper && type == KickType.Lob ? .40f : type == KickType.Shot ? .26f : .22f);
             Animation?.Trigger(type == KickType.Shot ? "Shoot" : type == KickType.Through ? "Through" : "Pass");
             yield return new WaitForSeconds(contactDelay);
 
@@ -724,12 +742,13 @@ namespace BeastSoccer.Player
             switch (type)
             {
                 case KickType.Shot:
-                    // Shots leave the foot hard, then naturally lose speed through the ball Rigidbody's
-                    // linear damping. Distance adds power so a strike from range still reads as a shot.
+                    // V6: make strikes decisively arcade-fast. This is 1.3x the already-boosted V5
+                    // shot launch speed; ball damping still handles the tail of the trajectory.
                     force = Mathf.Clamp(GameConfig.Instance.shotBaseForce + distance * GameConfig.Instance.shotForcePerUnit,
                         GameConfig.Instance.shotMinForce, GameConfig.Instance.shotMaxForce);
                     force *= baseShot * (Ult != null ? Ult.ShotMultiplier : 1f);
                     if (Ult != null && Ult.IsActive) force *= GameConfig.Instance.ultShotBallSpeedBonus;
+                    force *= 1.45f;
                     arc = GameConfig.Instance.shotVisualArc;
                     break;
                 case KickType.Through:
@@ -740,9 +759,19 @@ namespace BeastSoccer.Player
                     arc=GameConfig.Instance.throughVisualArc;
                     break;
                 case KickType.Lob:
-                    force=Mathf.Clamp(distance * GameConfig.Instance.ballLinearDrag + GameConfig.Instance.lobArrivalSpeed,
-                        GameConfig.Instance.lobMinForce, GameConfig.Instance.lobMaxForce);
-                    arc=GameConfig.Instance.lobVisualArc;
+                    if (Role == FieldRole.Goalkeeper && DuelRules.Enabled)
+                    {
+                        // V7: keeper outlets stay fast, but use their own capped launch profile.
+                        // V6 used full boosted shot velocity here, which could clear the entire pitch.
+                        force = Mathf.Clamp(6.5f + distance * .85f, 10.5f, 15.5f);
+                        arc = .32f;
+                    }
+                    else
+                    {
+                        force=Mathf.Clamp(distance * GameConfig.Instance.ballLinearDrag + GameConfig.Instance.lobArrivalSpeed,
+                            GameConfig.Instance.lobMinForce, GameConfig.Instance.lobMaxForce);
+                        arc=GameConfig.Instance.lobVisualArc;
+                    }
                     break;
                 default:
                     force=Mathf.Clamp(distance * GameConfig.Instance.ballLinearDrag + GameConfig.Instance.passArrivalSpeed,
@@ -767,6 +796,8 @@ namespace BeastSoccer.Player
             if (kickRoutine != null) StopCoroutine(kickRoutine);
             kickRoutine = null;
             kickBusy = false;
+            VisualKickType = KickType.None;
+            VisualKickUntil = -999f;
             actionLocked = false;
             BallControl.Instance?.CancelActionSetup(this);
         }
@@ -988,6 +1019,9 @@ namespace BeastSoccer.Player
             if (bodyCollider != null) bodyCollider.enabled = true;
             Ult?.NotifyGoroSlamEnded();
             KeeperHoldUntil = 0f;
+            VisualKickType = KickType.None;
+            VisualKickStartedAt = -999f;
+            VisualKickUntil = -999f;
             possessionProtectedUntil = 0f;
             tackleLockedUntil = 0f;
             // Sprint stamina is match state, not restart state. Goals/kickoffs do not refill it;

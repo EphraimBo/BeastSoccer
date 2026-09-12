@@ -1,0 +1,29 @@
+V11 VALIDATION - 12 SEPTEMBER 2026
+
+Executed locally:
+- Parsed all 35 included C# source files with the C# tree-sitter grammar: passed.
+  This checks syntax only; it is not a Unity/C# semantic compilation.
+- Numerical perspective projection of all 8 camera-envelope corners across
+  8 screen/safe-area layouts (64 checks): all inside the intended viewport.
+  Cases include 4:3 tablet, 16:9, 1536x699, two wide iPhone-like layouts, 20:9,
+  ultrawide and portrait-transition dimensions.
+- Numerical HUD bounds for 10 controls/overlays across those 8 layouts
+  (80 checks): all inside the safe design space, including the dragged joystick
+  knob, outer shoot glow, enlarged ult, pause, score and meters.
+- All 179 approved PNG hashes match V10. BallControl, AIController,
+  PlayerController and DemoMatchRules also match V10 byte-for-byte.
+- Cumulative payload retains every V10 file.
+
+These numerical checks model the layout formulas, not rendered Unity behavior.
+Updated Unity PlayMode tests cover Camera.WorldToViewportPoint for full-pitch
+bounds and actual HUD RectTransform corners. They have NOT been run here:
+Unity Editor, semantic compilation and iPhone/device playback are unavailable.
+
+On-device checks after rebuilding/installing:
+- DEMO V11 appears on MainMenu.
+- Rotate to both landscape orientations: score, timer, pause, sprint ring,
+  shoot/ult and bottom power meter remain inside the screen/notch boundaries.
+- Both goals/touchlines remain framed as play moves across the field.
+- Diagonal movement uses the three-quarter frames promptly without restarting
+  the run cycle each time the character turns.
+- Pause/resume/restart and match-end buttons remain visible and tappable.

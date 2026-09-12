@@ -34,6 +34,8 @@ namespace BeastSoccer.AI
         private float nextTackleAllowed;
         private PlayerController kickoffReturnTarget;
         private float kickoffReturnAt;
+        private float keeperOutletBurstUntil;
+        private float nextDuelUltCheck;
 
         private void Awake() { player = GetComponent<PlayerController>(); }
         private void Start() { homeLaneY = transform.position.y; ForceImmediateDecision(); }
@@ -118,6 +120,8 @@ namespace BeastSoccer.AI
             nextTackleAllowed = 0f;
             kickoffReturnTarget = null;
             kickoffReturnAt = 0f;
+            keeperOutletBurstUntil = 0f;
+            nextDuelUltCheck = 0f;
             ForceImmediateDecision();
         }
 
@@ -125,6 +129,8 @@ namespace BeastSoccer.AI
         {
             if (player == null || player.IsHuman || player.IsSuppressed || GameManager.Instance == null || GameManager.Instance.Phase != MatchPhase.Playing)
                 return;
+
+            TryUseDuelUltimate();
 
             bool hasBallNow = player.HasBall;
             // Home outfielders never autonomously pass or shoot. If one wins/receives possession,
@@ -147,6 +153,21 @@ namespace BeastSoccer.AI
                 {
                     recentPasser = null;
                     avoidReturnPassUntil = 0f;
+                }
+
+                // V6 duel outlet: an away attacker receiving directly from Goro gets a short
+                // protected sprint burst so the human cannot strip them on the reception frame.
+                // If their ult is charged, fire it immediately so the break starts at ult pace.
+                bool receivedKeeperOutlet = DuelRules.Enabled && player.Side == TeamSide.Away &&
+                    lastKicker != null && lastKicker.Side == player.Side && lastKicker.Role == FieldRole.Goalkeeper;
+                if (receivedKeeperOutlet)
+                {
+                    keeperOutletBurstUntil = Time.time + Mathf.Max(0.2f, GameConfig.Instance.aiKeeperOutletBurstSeconds);
+                    possessionCommitUntil = Mathf.Max(possessionCommitUntil, keeperOutletBurstUntil);
+                    player.ProtectPossession(Mathf.Max(0.2f, GameConfig.Instance.aiKeeperOutletProtectionSeconds));
+                    if (player.Ult != null && player.Ult.Charge >= 0.999f)
+                        player.Ult.TryActivateAI();
+                    ForceImmediateDecision();
                 }
 
                 // The one exception to the normal no-return-pass rule: the first recipient from a
@@ -201,7 +222,17 @@ namespace BeastSoccer.AI
                 return;
             }
 
-            if (player.Side == TeamSide.Away && player.Character != CharacterType.Generic && player.Ult != null &&
+            if (hasBallNow && player.Side == TeamSide.Away && player.Role != FieldRole.Goalkeeper && Time.time < keeperOutletBurstUntil)
+            {
+                int burstDir = TeamManager.Instance.AttackDirFor(player.Side);
+                float laneBias = Mathf.Clamp(-transform.position.y * 0.22f, -0.55f, 0.55f);
+                Vector2 burstDirection = new Vector2(burstDir, laneBias).normalized;
+                player.SetAIMove(burstDirection, true);
+                player.SetFacing(burstDirection);
+                return;
+            }
+
+            if (player.Role != FieldRole.Goalkeeper && player.Side == TeamSide.Away && player.Character != CharacterType.Generic && player.Ult != null &&
                 MatchTimer.Instance != null && MatchTimer.Instance.IsFinalStretch && player.Ult.Charge >= 0.999f &&
                 Random.value < GameConfig.Instance.finalStretchAIAutoUltChance * Time.fixedDeltaTime * 3f)
             {
@@ -228,6 +259,20 @@ namespace BeastSoccer.AI
             }
 
             ApplySteering();
+        }
+
+        private void TryUseDuelUltimate()
+        {
+            if (!DuelRules.Enabled || player.Side != TeamSide.Away || player.Role == FieldRole.Goalkeeper ||
+                player.Ult == null || player.Ult.IsActive || player.Ult.IsActivating ||
+                player.Ult.Charge < .999f || Time.time < nextDuelUltCheck) return;
+            nextDuelUltCheck = Time.time + .5f;
+            var ball = BallControl.Instance;
+            // Spend ready ults during normal attacks/defence, instead of waiting for the
+            // final stretch or a keeper outlet. Don't waste them during a keeper's hold.
+            if (ball == null || (ball.Owner != null && ball.Owner.Role == FieldRole.Goalkeeper)) return;
+            if (ball.Owner == null && Vector2.Distance(player.transform.position, ball.transform.position) > 5f) return;
+            player.Ult.TryActivateAI();
         }
 
         private void PlanDecision()
@@ -268,7 +313,7 @@ namespace BeastSoccer.AI
                 return;
             }
 
-            if (distGoal <= GameConfig.Instance.aiShootDistance)
+            if (distGoal <= GameConfig.Instance.aiShootDistance && DuelRules.CanScoreFrom(player))
             {
                 SetSteering(Vector2.zero, false, false);
                 player.Shoot();
@@ -465,7 +510,7 @@ namespace BeastSoccer.AI
             int dir = TeamManager.Instance.AttackDirFor(player.Side);
             float ownGoalX = -dir * GameConfig.Instance.pitchLength * 0.5f;
 
-            if (player.FormationRole == TacticalRole.Presser)
+            if (player.FormationRole == TacticalRole.Presser || DuelRules.Enabled)
             {
                 if (Time.time < duelDisengageUntil)
                 {
@@ -497,7 +542,11 @@ namespace BeastSoccer.AI
                     if (player.Character == CharacterType.Generic && Random.value < GameConfig.Instance.aiJockeyChance)
                         player.Defense?.Jockey(player.MoveFacing);
                     else
-                        player.Defense?.Tackle();
+                        if (player.Defense != null)
+                        {
+                            GameFeel.Shake(0.035f);
+                            player.Defense.Tackle();
+                        }
                 }
                 return;
             }
@@ -626,7 +675,7 @@ namespace BeastSoccer.AI
 
             // A keeper should save opponent/neutral balls, but should not vacuum up a teammate's
             // attempted outlet and accidentally turn it into a back-pass loop.
-            if (ball != null && ball.Mode == BallControl.BallMode.Free && ballDistance <= GameConfig.Instance.keeperSaveRadius && KeeperShouldClaim(ball))
+            if (!DuelRules.Enabled && ball != null && ball.Mode == BallControl.BallMode.Free && ballDistance <= GameConfig.Instance.keeperSaveRadius && KeeperShouldClaim(ball))
             {
                 player.GainBall(GameConfig.Instance.keeperPossessionSeconds + 0.45f);
                 if (player.HasBall)
@@ -642,7 +691,11 @@ namespace BeastSoccer.AI
             var carrier = TeamManager.Instance.BallOwner(other);
             if (carrier != null && Vector2.Distance(transform.position, carrier.transform.position) <= GameConfig.Instance.keeperChallengeDistance)
             {
-                player.Defense?.Tackle();
+                if (player.Defense != null)
+                {
+                    GameFeel.Shake(0.035f);
+                    player.Defense.Tackle();
+                }
             }
 
             float x = ownGoalX + dir*GameConfig.Instance.keeperGoalOffset;
