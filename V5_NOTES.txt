@@ -1,0 +1,14 @@
+BEAST SOCCER V5 — SMALL CORRECTION PASS
+
+Changes from v4:
+- Slightly easier tackles: range 0.98 -> 1.05.
+- Expanded valid tackle angles by shrinking the protected rear cone from 60° half-angle to 50°.
+- Small camera shake on every human and AI tackle attempt.
+- Goal detection made authoritative in arcade duel mode: if the ball crosses the line between the posts, it scores.
+- Goal sensor now also recovers the race where an end-line trigger briefly calls GOAL KICK first.
+- Ball Rigidbody2D uses continuous collision detection for the faster v4 shots.
+- Goal line test uses the ball centre crossing the line so enlarged/high-speed shots do not visually enter the net without counting.
+- Menu/pause typography changed from very heavy display faces to Trebuchet/Verdana/Arial fallbacks.
+- Normal menu text is regular weight with much lighter outline/shadow; PAUSED keeps only a modest bold hierarchy.
+
+No Git changes are included or pushed.

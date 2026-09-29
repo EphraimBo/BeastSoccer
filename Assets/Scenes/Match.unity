@@ -6445,6 +6445,8 @@ MonoBehaviour:
   walkRing: {fileID: 323679289}
   sprintRing: {fileID: 1835046721}
   knobRange: 108
+  sprintTrack: {fileID: 0}
+  sprintSweep: {fileID: 0}
 --- !u!224 &692163804
 RectTransform:
   m_ObjectHideFlags: 0
@@ -7230,7 +7232,7 @@ Camera:
     height: 1
   near clip plane: 0.3
   far clip plane: 1000
-  field of view: 46
+  field of view: 35
   orthographic: 0
   orthographic size: 5
   m_Depth: 0
@@ -15113,6 +15115,12 @@ MonoBehaviour:
   aiCarryLookAhead: 2.75
   aiMinPassDistance: 2.75
   aiReceiveCommitSeconds: 0.78
+  aiKeeperOutletBurstSeconds: 0.95
+  aiKeeperOutletProtectionSeconds: 0.9
+  keeperOutletMinForce: 4.8
+  keeperOutletMaxForce: 6.8
+  keeperOutletBaseForce: 3.6
+  keeperOutletForcePerUnit: 0.35
   aiReturnPassCooldown: 1.75
   postTackleProtectionSeconds: 1.35
   tackleLockoutAfterLossSeconds: 1.8
