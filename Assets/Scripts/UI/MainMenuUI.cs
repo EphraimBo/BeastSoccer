@@ -25,16 +25,29 @@ namespace BeastSoccer.UI
 
         private void Start()
         {
-            ApplyPrototypeMenuTweaks();
-            ApplyMenuTypography();
+            // FIX29 is the visual source of truth. Detect it by hierarchy as well as
+            // the serialized reference, so a stale inspector reference cannot send us
+            // back to the legacy menu or runtime restyling path.
             var overhaul = GetComponent<BeastMenuOverhaul>();
             if (overhaul != null)
             {
-                overhaul.Initialize(this);
-                return;
+                if (overhaul.root == null)
+                {
+                    var editable = transform.Find("FIX29_MENU_EDITABLE");
+                    if (editable != null) overhaul.root = editable.gameObject;
+                }
+
+                if (overhaul.root != null)
+                {
+                    overhaul.Initialize(this);
+                    return;
+                }
             }
 
-            // Legacy fallback only if FIX29 controller is absent.
+            // Legacy fallback only if FIX29 genuinely does not exist.
+            ApplyPrototypeMenuTweaks();
+            ApplyMenuTypography();
+
             if (MatchSetup.OpenCharacterSelectOnLoad)
             {
                 MatchSetup.OpenCharacterSelectOnLoad = false;
@@ -61,10 +74,7 @@ namespace BeastSoccer.UI
                     label.fontSize = Mathf.Max(label.fontSize, 24);
                     label.alignment = TextAnchor.MiddleCenter;
                 }
-                else
-                {
-                    label.fontSize = Mathf.Max(label.fontSize, 20);
-                }
+                else label.fontSize = Mathf.Max(label.fontSize, 20);
 
                 var outline = label.GetComponent<Outline>();
                 if (outline == null) outline = label.gameObject.AddComponent<Outline>();
@@ -83,15 +93,9 @@ namespace BeastSoccer.UI
             if (displayFont != null) return displayFont;
             try
             {
-                displayFont = Font.CreateDynamicFontFromOSFont(new[]
-                {
-                    "Trebuchet MS", "Verdana", "Arial"
-                }, size);
+                displayFont = Font.CreateDynamicFontFromOSFont(new[] { "Trebuchet MS", "Verdana", "Arial" }, size);
             }
-            catch
-            {
-                displayFont = null;
-            }
+            catch { displayFont = null; }
 
             if (displayFont == null)
             {
@@ -107,24 +111,20 @@ namespace BeastSoccer.UI
 
         private void ApplyPrototypeMenuTweaks()
         {
-            if (modePanel != null)
-            {
-                var defending = modePanel.transform.Find("DEFENDING");
-                if (defending != null)
-                {
-                    var b = defending.GetComponent<Button>();
-                    if (b != null) b.interactable = false;
-                }
-            }
+            if (modePanel == null) return;
+            var defending = modePanel.transform.Find("DEFENDING");
+            if (defending == null) return;
+            var b = defending.GetComponent<Button>();
+            if (b != null) b.interactable = false;
         }
 
         public void OnPickLeo() { MatchSetup.PlayerCharacter = CharacterType.Leo; Show(opponentPanel); }
-        public void OnPickGoro() { } // Goro is reserved for the two AI goalkeepers.
+        public void OnPickGoro() { }
         public void OnPickVolt() { MatchSetup.PlayerCharacter = CharacterType.Volt; Show(opponentPanel); }
 
-        public void OnOpponentLeo() { SetOpp(CharacterType.Leo); }
+        public void OnOpponentLeo() => SetOpp(CharacterType.Leo);
         public void OnOpponentGoro() { }
-        public void OnOpponentVolt() { SetOpp(CharacterType.Volt); }
+        public void OnOpponentVolt() => SetOpp(CharacterType.Volt);
         public void OnOpponentRandom() { MatchSetup.OpponentRandom = true; StartMatch(); }
 
         private void SetOpp(CharacterType c)

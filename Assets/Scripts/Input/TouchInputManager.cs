@@ -9,14 +9,47 @@ namespace BeastSoccer.Input
         public JoystickInput joystick;
         private PlayerController Human => TeamManager.Instance != null ? TeamManager.Instance.CurrentHuman() : null;
 
+#if UNITY_EDITOR
+        private static Vector2 EditorMoveVector()
+        {
+#if ENABLE_LEGACY_INPUT_MANAGER
+            return new Vector2(
+                UnityEngine.Input.GetAxisRaw("Horizontal"),
+                UnityEngine.Input.GetAxisRaw("Vertical")
+            );
+#else
+            // Touch UI remains fully testable in Play Mode. Keyboard debug input is
+            // intentionally disabled when Unity has legacy input turned off.
+            return Vector2.zero;
+#endif
+        }
+
+        private static bool EditorSprintHeld()
+        {
+#if ENABLE_LEGACY_INPUT_MANAGER
+            return UnityEngine.Input.GetKey(KeyCode.LeftShift) || UnityEngine.Input.GetKey(KeyCode.RightShift);
+#else
+            return false;
+#endif
+        }
+
+        private static bool EditorKeyDown(KeyCode key)
+        {
+#if ENABLE_LEGACY_INPUT_MANAGER
+            return UnityEngine.Input.GetKeyDown(key);
+#else
+            return false;
+#endif
+        }
+#endif
+
         private void Update()
         {
             var h = Human;
             if (h == null || !h.IsHuman) return;
 
 #if UNITY_EDITOR
-            // Pause/resume remains available even when gameplay input is gated.
-            if (UnityEngine.Input.GetKeyDown(KeyCode.Escape))
+            if (EditorKeyDown(KeyCode.Escape))
             {
                 OnPause();
                 return;
@@ -25,30 +58,22 @@ namespace BeastSoccer.Input
 
             if (GameManager.Instance == null) return;
 
-            // Kickoff is a fixed formation. The only gameplay input allowed once the setup delay
-            // finishes is PASS from the actual kickoff player. That pass releases everyone and
-            // starts/resumes the match clock.
             if (GameManager.Instance.Phase == BeastSoccer.Data.MatchPhase.Kickoff)
             {
                 h.ClearMovementInput(true);
 #if UNITY_EDITOR
-                if (GameManager.Instance.CanTakeKickoff(h) && UnityEngine.Input.GetKeyDown(KeyCode.E)) OnPass();
+                if (GameManager.Instance.CanTakeKickoff(h) && EditorKeyDown(KeyCode.E)) OnPass();
 #endif
                 return;
             }
 
-            // Human throw-in/corner aiming: the match clock remains paused, the taker stays on
-            // the restart spot, and the movement control becomes an aim stick. Other players remain live.
             if (GameManager.Instance.IsHumanAimingSetPiece(h))
             {
 #if UNITY_EDITOR
-                Vector2 aim = new Vector2(
-                    UnityEngine.Input.GetAxisRaw("Horizontal"),
-                    UnityEngine.Input.GetAxisRaw("Vertical")
-                );
+                Vector2 aim = EditorMoveVector();
                 if (aim.sqrMagnitude <= 0.01f && joystick != null) aim = joystick.Direction;
                 h.SetAimInput(aim);
-                if (UnityEngine.Input.GetKeyDown(KeyCode.E) || UnityEngine.Input.GetKeyDown(KeyCode.Q) || UnityEngine.Input.GetKeyDown(KeyCode.C))
+                if (EditorKeyDown(KeyCode.E) || EditorKeyDown(KeyCode.Q) || EditorKeyDown(KeyCode.C))
                     OnLob();
 #else
                 h.SetAimInput(joystick != null ? joystick.Direction : Vector2.zero);
@@ -56,7 +81,6 @@ namespace BeastSoccer.Input
                 return;
             }
 
-            // Never queue movement or action state during goal reset, halftime, etc.
             if (GameManager.Instance.Phase != BeastSoccer.Data.MatchPhase.Playing)
             {
                 h.ClearMovementInput(true);
@@ -64,26 +88,22 @@ namespace BeastSoccer.Input
             }
 
 #if UNITY_EDITOR
-            Vector2 keyboard = new Vector2(
-                UnityEngine.Input.GetAxisRaw("Horizontal"),
-                UnityEngine.Input.GetAxisRaw("Vertical")
-            );
+            Vector2 keyboard = EditorMoveVector();
             bool keyboardMoving = keyboard.sqrMagnitude > 0.01f;
             if (keyboardMoving)
-                h.SetEditorMoveInput(keyboard.normalized, UnityEngine.Input.GetKey(KeyCode.LeftShift));
+                h.SetEditorMoveInput(keyboard.normalized, EditorSprintHeld());
             else
                 h.SetMoveInput(joystick != null ? joystick.Direction : Vector2.zero);
 
-            // Desktop debug controls. These call exactly the same gameplay methods as touch UI.
-            if (UnityEngine.Input.GetKeyDown(KeyCode.Space)) OnShoot();
-            if (UnityEngine.Input.GetKeyDown(KeyCode.E)) OnPass();
-            if (UnityEngine.Input.GetKeyDown(KeyCode.Q)) OnLob();
-            if (UnityEngine.Input.GetKeyDown(KeyCode.F)) OnTackle();
-            if (UnityEngine.Input.GetKeyDown(KeyCode.R)) OnIntercept();
-            if (UnityEngine.Input.GetKeyDown(KeyCode.C)) OnLob();
-            if (UnityEngine.Input.GetKeyDown(KeyCode.X)) OnUltimate();
-            if (UnityEngine.Input.GetKeyDown(KeyCode.V)) OnFly();
-            if (UnityEngine.Input.GetKeyDown(KeyCode.Tab)) OnSwitch();
+            if (EditorKeyDown(KeyCode.Space)) OnShoot();
+            if (EditorKeyDown(KeyCode.E)) OnPass();
+            if (EditorKeyDown(KeyCode.Q)) OnLob();
+            if (EditorKeyDown(KeyCode.F)) OnTackle();
+            if (EditorKeyDown(KeyCode.R)) OnIntercept();
+            if (EditorKeyDown(KeyCode.C)) OnLob();
+            if (EditorKeyDown(KeyCode.X)) OnUltimate();
+            if (EditorKeyDown(KeyCode.V)) OnFly();
+            if (EditorKeyDown(KeyCode.Tab)) OnSwitch();
 #else
             h.SetMoveInput(joystick != null ? joystick.Direction : Vector2.zero);
 #endif
@@ -114,6 +134,7 @@ namespace BeastSoccer.Input
         }
 
         public void OnShoot() => Human?.Shoot();
+
         public void OnPass()
         {
             var h = Human;
@@ -121,8 +142,10 @@ namespace BeastSoccer.Input
             if (GameManager.Instance != null && GameManager.Instance.IsHumanAimingSetPiece(h)) h.Lob();
             else h.Pass();
         }
+
         public void OnThrough() => Human?.ThroughBall();
         public void OnLob() => Human?.Lob();
+
         public void OnUltimate()
         {
             var ult = Human != null ? Human.Ult : null;
@@ -130,7 +153,9 @@ namespace BeastSoccer.Input
             if (DuelRules.Enabled && ult.IsActive) ult.TrySpecialAction();
             else ult.TryActivate();
         }
+
         public void OnFly() => Human?.Ult?.TrySpecialAction();
+
         public void OnTackle()
         {
             var h = Human;
@@ -138,9 +163,11 @@ namespace BeastSoccer.Input
             GameFeel.Shake(0.035f);
             h.Defense.Tackle();
         }
+
         public void OnIntercept() => Human?.Defense?.Intercept();
         public void OnJockey() => Human?.Defense?.Jockey(Human != null ? Human.MoveFacing : Vector2.right);
         public void OnSwitch() => ControlSwitcher.Instance?.SwitchToClosestToBall();
+
         public void OnPause()
         {
             if (GameManager.Instance == null) return;
