@@ -1,5 +1,4 @@
 using UnityEngine;
-using UnityEngine.UI;
 
 namespace BeastSoccer.UI
 {
@@ -8,17 +7,6 @@ namespace BeastSoccer.UI
     {
         private Rect last;
         private Vector2 lastSize;
-
-        public static void ConfigureCanvas(Canvas canvas)
-        {
-            if (canvas == null) return;
-            var scaler = canvas.GetComponent<CanvasScaler>();
-            if (scaler == null) scaler = canvas.gameObject.AddComponent<CanvasScaler>();
-            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1600, 900);
-            // Expand preserves the complete design height on wide phones and width on tablets.
-            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;
-        }
 
         public static Rect NormalizedSafeArea()
         {

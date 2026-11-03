@@ -103,7 +103,6 @@ namespace BeastSoccer.Player
             Defense = GetComponent<DefensiveActions>();
         }
 
-        private void Start() { ConfigureCharacter(Character); }
 
         private void FixedUpdate()
         {
@@ -351,7 +350,7 @@ namespace BeastSoccer.Player
 
         private float UltMoveSpeedMultiplier()
         {
-            return Ult != null && Ult.IsActive ? DemoMatchRules.UltMovementMultiplier : 1f;
+            return Ult != null && Ult.IsActive ? GameConfig.Instance.ultMovementSpeedMultiplier : 1f;
         }
 
         private void ApplyMovement()
@@ -684,8 +683,8 @@ namespace BeastSoccer.Player
                 : GameConfig.Instance.passContactSeconds;
             if (DuelRules.Enabled)
             {
-                if (type == KickType.Shot) contactDelay = 0.14f;
-                else if (type == KickType.Lob && Role == FieldRole.Goalkeeper) contactDelay = 0.12f;
+                if (type == KickType.Shot) contactDelay = GameConfig.Instance.duelShotContactSeconds;
+                else if (type == KickType.Lob && Role == FieldRole.Goalkeeper) contactDelay = GameConfig.Instance.duelKeeperThrowContactSeconds;
             }
             if (BallControl.Instance == null || !BallControl.Instance.BeginAction(this, aim, contactDelay)) yield break;
 
@@ -748,7 +747,7 @@ namespace BeastSoccer.Player
                         GameConfig.Instance.shotMinForce, GameConfig.Instance.shotMaxForce);
                     force *= baseShot * (Ult != null ? Ult.ShotMultiplier : 1f);
                     if (Ult != null && Ult.IsActive) force *= GameConfig.Instance.ultShotBallSpeedBonus;
-                    force *= 1.45f;
+                    force *= GameConfig.Instance.shotLaunchMultiplier;
                     arc = GameConfig.Instance.shotVisualArc;
                     break;
                 case KickType.Through:
@@ -763,8 +762,10 @@ namespace BeastSoccer.Player
                     {
                         // V7: keeper outlets stay fast, but use their own capped launch profile.
                         // V6 used full boosted shot velocity here, which could clear the entire pitch.
-                        force = Mathf.Clamp(6.5f + distance * .85f, 10.5f, 15.5f);
-                        arc = .32f;
+                        force = Mathf.Clamp(GameConfig.Instance.duelKeeperThrowBaseForce
+                            + distance * GameConfig.Instance.duelKeeperThrowForcePerUnit,
+                            GameConfig.Instance.duelKeeperThrowMinForce, GameConfig.Instance.duelKeeperThrowMaxForce);
+                        arc = GameConfig.Instance.duelKeeperThrowArc;
                     }
                     else
                     {
@@ -939,7 +940,7 @@ namespace BeastSoccer.Player
 
         private IEnumerator FlightRoutine(float duration, float maxHeight)
         {
-            // FIX22: Volt is a huge jump with hang time, not a hovering platform. Horizontal
+            // Volt is a huge jump with hang time, not a hovering platform. Horizontal
             // movement remains the normal ground solver while the presentation follows a jump arc.
             actionLocked = false;
             SetFlightCollision(true);

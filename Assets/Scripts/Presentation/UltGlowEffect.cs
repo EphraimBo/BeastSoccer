@@ -4,7 +4,7 @@ using BeastSoccer.Data;
 namespace BeastSoccer.Presentation
 {
     /// <summary>
-    /// FIX41: visible sprite-free ult aura. Uses enlarged echo silhouettes plus a small procedural
+    /// visible sprite-free ult aura. Uses enlarged echo silhouettes plus a small procedural
     /// energy particle field. No authored glow sprites/materials are required.
     /// </summary>
     [DefaultExecutionOrder(1700)]
@@ -42,6 +42,7 @@ namespace BeastSoccer.Presentation
         {
             if (visual == null) visual = GetComponent<PlayerVisualProxy>();
             if (targetRenderer == null && visual != null) targetRenderer = visual.spriteRenderer;
+            if (visual != null && visual.source != null) character = visual.source.Character;
             EnsureLayers();
             EnsureEnergy();
         }

@@ -18,15 +18,27 @@ namespace BeastSoccer.UI
         bool down;
         float phase;
 
+        public void SetTarget(RectTransform target)
+        {
+            visualTarget = target;
+            CaptureBaseTransform();
+        }
+
         void OnEnable()
         {
             if (!visualTarget) visualTarget = transform as RectTransform;
+            CaptureBaseTransform();
+            over = down = false;
+            phase = Random.Range(0f, 10f);
+        }
+
+        private void CaptureBaseTransform()
+        {
             if (visualTarget)
             {
                 baseScale = visualTarget.localScale;
                 baseRotation = visualTarget.localRotation;
             }
-            phase = Random.Range(0f, 10f);
         }
 
         void OnDisable()

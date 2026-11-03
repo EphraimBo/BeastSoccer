@@ -20,9 +20,6 @@ namespace BeastSoccer.Core
         private PlayerController kickoffKicker;
         private TeamSide kickoffSide;
         private PlayerController kickoffPlannedTarget;
-        private PlayerController kickoffReturnKicker;
-        private PlayerController kickoffReturnReceiver;
-        private bool kickoffReturnPending;
 
         private PlayerController preparedSetPieceTaker;
         private PlayerController preparedSetPieceTarget;
@@ -39,37 +36,6 @@ namespace BeastSoccer.Core
             if (kickoffPlannedTarget == null || kickoffPlannedTarget.Side != kicker.Side || kickoffPlannedTarget.Role == FieldRole.Goalkeeper)
                 kickoffPlannedTarget = TeamManager.Instance != null ? TeamManager.Instance.BestKickoffTarget(kicker) : null;
             return kickoffPlannedTarget;
-        }
-
-        public void ArmKickoffReturn(PlayerController kicker)
-        {
-            if (kicker == null || kicker != kickoffKicker) return;
-            var receiver = GetKickoffPassTarget(kicker);
-            if (receiver == null || receiver == kicker) return;
-            kickoffReturnKicker = kicker;
-            kickoffReturnReceiver = receiver;
-            kickoffReturnPending = true;
-        }
-
-        public bool TryGetKickoffReturnTarget(PlayerController receiver, out PlayerController returnTarget)
-        {
-            returnTarget = null;
-            if (!kickoffReturnPending || receiver == null || receiver != kickoffReturnReceiver || kickoffReturnKicker == null) return false;
-            if (receiver.Side != kickoffReturnKicker.Side) { ClearKickoffReturn(); return false; }
-            returnTarget = kickoffReturnKicker;
-            return true;
-        }
-
-        public void CompleteKickoffReturn(PlayerController receiver)
-        {
-            if (kickoffReturnPending && receiver == kickoffReturnReceiver) ClearKickoffReturn();
-        }
-
-        private void ClearKickoffReturn()
-        {
-            kickoffReturnPending = false;
-            kickoffReturnKicker = null;
-            kickoffReturnReceiver = null;
         }
 
         private void Awake()
@@ -101,7 +67,7 @@ namespace BeastSoccer.Core
 
             PlaceBallAtCenter();
             if (kickoffKicker != null)
-                BallControl.Instance?.SetOwner(kickoffKicker, true);
+                BallControl.Instance?.SetOwner(kickoffKicker);
 
             var homeSpecial = TeamManager.Instance.SpecialFor(TeamSide.Home);
             if (homeSpecial != null) TeamManager.Instance.SetHuman(homeSpecial);
@@ -126,7 +92,7 @@ namespace BeastSoccer.Core
             {
                 int dir = TeamManager.Instance.AttackDirFor(attacker.Side);
                 attacker.SetFacing(new Vector2(dir, 0f));
-                BallControl.Instance?.SetOwner(attacker, true);
+                BallControl.Instance?.SetOwner(attacker);
             }
 
             var special = TeamManager.Instance.SpecialFor(TeamSide.Home);
@@ -157,7 +123,6 @@ namespace BeastSoccer.Core
             kickoffLocks.Clear();
             kickoffKicker = null;
             kickoffPlannedTarget = null;
-            ClearKickoffReturn();
             ClearPreparedSetPiece();
 
             BallControl.Instance?.ForceReleaseAndStop();
@@ -167,7 +132,7 @@ namespace BeastSoccer.Core
             receiver.TeleportTo(ClampToPitch(spot + new Vector2(-TeamManager.Instance.AttackDirFor(restartSide) * 0.45f, 0f)));
             receiver.SetFacing(new Vector2(TeamManager.Instance.AttackDirFor(restartSide), 0f));
             BallControl.Instance?.TeleportFree(ClampToPitch(spot));
-            BallControl.Instance?.SetOwner(receiver, true);
+            BallControl.Instance?.SetOwner(receiver);
         }
 
         public PlayerController PrepareSetPiece(SetPieceType type, TeamSide restartSide, Vector2 spot)
@@ -176,7 +141,6 @@ namespace BeastSoccer.Core
             kickoffLocks.Clear();
             kickoffKicker = null;
             kickoffPlannedTarget = null;
-            ClearKickoffReturn();
             ClearPreparedSetPiece();
 
             TeamManager.Instance?.StopAllPlayers();
@@ -202,7 +166,7 @@ namespace BeastSoccer.Core
             preparedSetPieceTaker.TeleportTo(takerPos);
             preparedSetPieceTaker.SetFacing(new Vector2(TeamManager.Instance.AttackDirFor(restartSide), 0f));
             BallControl.Instance?.TeleportFree(ClampToPitch(spot));
-            BallControl.Instance?.SetOwner(preparedSetPieceTaker, true);
+            BallControl.Instance?.SetOwner(preparedSetPieceTaker);
 
             if (type == SetPieceType.GoalKick)
                 preparedSetPieceTarget = TeamManager.Instance.BestGoalkeeperDistributionTarget(preparedSetPieceTaker);
@@ -221,7 +185,6 @@ namespace BeastSoccer.Core
             Physics2D.SyncTransforms();
             return preparedSetPieceTaker;
         }
-
 
         private void FacePlayersForSetPiece(TeamSide restartSide, Vector2 spot, PlayerController taker, PlayerController target)
         {
@@ -277,7 +240,6 @@ namespace BeastSoccer.Core
             kickoffLocks.Clear();
             kickoffKicker = null;
             kickoffPlannedTarget = null;
-            ClearKickoffReturn();
             ClearPreparedSetPiece();
 
             BallControl.Instance?.ForceReleaseAndStop();
@@ -411,7 +373,6 @@ namespace BeastSoccer.Core
             kickoffLocks.Clear();
             kickoffKicker = null;
             kickoffPlannedTarget = null;
-            // Do not clear kickoffReturnPending here. The first return pass happens after play
             // becomes live, so its tiny two-pass sequence must survive the lock release.
         }
 

@@ -33,7 +33,7 @@ namespace BeastSoccer.Player
             TackleVisualStartedAt = Time.time;
             // Tackling is an action state, not a locomotion freeze. The player keeps moving
             // through the tackle so the button never feels like a brake pedal.
-            // FIX22: the tackle is represented by the collision itself rather than a canned lunge animation.
+            // the tackle is represented by the collision itself rather than a canned lunge animation.
             float windup = GameConfig.Instance.tackleWindupSeconds;
             if (player.Character == CharacterType.Goro) windup *= GameConfig.Instance.goroTackleWindupMultiplier;
             yield return new WaitForSeconds(windup / Mathf.Max(0.5f, player.TackleMultiplier));
@@ -64,7 +64,7 @@ namespace BeastSoccer.Player
                 var target = hit != null ? hit.GetComponentInParent<PlayerController>() : null;
                 if (target==null || target.Side==player.Side || !target.HasBall || target.IsFlying) continue;
 
-                // FIX22: tackle eligibility is based on where the tackler is relative to the CARRIER.
+                // tackle eligibility is based on where the tackler is relative to the CARRIER.
                 // The only illegal tackle zone is a 120-degree cone directly behind the carrier
                 // (60 degrees either side of straight-behind). Front and side collisions are fair.
                 Vector2 toTarget = (Vector2)target.transform.position - rb.position;

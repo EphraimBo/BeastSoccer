@@ -16,35 +16,21 @@ namespace BeastSoccer.Presentation
         public Animator animator;
         public CharacterVisualLibrary visualLibrary;
         public CharacterAnimationDriver animationDriver;
-        // FIX18: small guaranteed presentation clearance above the 3D pitch. Sprite feet still
+        // small guaranteed presentation clearance above the 3D pitch. Sprite feet still
         // align to the simulation root through their pivot; physics/colliders are not moved.
         public float baseHeight = 0.045f;
         public float extraHeight;
         public Transform shadow;
-        public GameObject controlledIndicator;
-        public GameObject possessionIndicator;
+        public GameObject humanControlMarker;
         public Transform facingIndicator;
         public TextMesh roleLabel;
         public GameObject flightIndicator;
-        public GameObject ultAttackIndicator;
-        public GameObject ultDefenseIndicator;
         public TrailRenderer voltFlightTrail;
-        private SpriteRenderer ultGlowRenderer;
         private Vector3 baseShadowScale = new Vector3(.36f,.01f,.25f);
-        private bool lastFacingRight;
-        private Vector3 authoredLocalScale;
-        private bool authoredScaleCaptured;
-
-        private void Awake()
-        {
-            authoredLocalScale = transform.localScale;
-            authoredScaleCaptured = true;
-        }
 
         private void Start()
         {
             if (shadow != null) baseShadowScale = shadow.localScale;
-            EnsureUltGlow();
         }
 
         private void LateUpdate()
@@ -69,17 +55,10 @@ namespace BeastSoccer.Presentation
             transform.position = new Vector3(p.x, baseHeight + extraHeight + flightBob + kickoffLift + source.ImpactVisualHeight, p.y);
             if (Camera.main != null) transform.rotation = Camera.main.transform.rotation;
 
-            // FIX18: the first Leo art set is authored facing LEFT. Preserve the old convention
-            // for placeholder/future non-directional art, but invert horizontal mirroring for the
-            // directional Leo test so left is unflipped and right is flipped.
-            if (spriteRenderer != null && Mathf.Abs(source.MoveFacing.x) > 0.05f)
-            {
-                lastFacingRight = source.MoveFacing.x > 0f;
-                bool artFacesLeft = animationDriver != null && animationDriver.UsesDirectionalRunPrototype && animationDriver.SourceArtFacesLeft;
-                spriteRenderer.flipX = artFacesLeft ? lastFacingRight : !lastFacingRight;
-            }
-
-            animationDriver?.UpdateDirectionalRun(source.Character, source.MoveFacing);
+            // Approved named-character mirroring belongs to CharacterSpriteAnimator.
+            if (spriteRenderer != null && source.Character == CharacterType.Generic &&
+                Mathf.Abs(source.MoveFacing.x) > 0.05f)
+                spriteRenderer.flipX = source.MoveFacing.x < 0f;
 
             if (shadow != null)
             {
@@ -90,17 +69,11 @@ namespace BeastSoccer.Presentation
 
             bool debug = GameConfig.Instance == null || GameConfig.Instance.showDebugPlayerIndicators;
 
-            // FIX27: the supplied green ground marker means HUMAN CONTROL, not possession.
-            // It is always visible under whichever home outfielder the player currently controls,
-            // regardless of debug-overlay settings or whether that player has the ball. AI players
-            // never receive it. The old generated outline ring is suppressed to avoid two markers.
-            if (controlledIndicator != null)
-                controlledIndicator.SetActive(false);
-
-            if (possessionIndicator != null)
+            // This marker represents human control, including when the ball is loose.
+            if (humanControlMarker != null)
             {
-                possessionIndicator.SetActive(source.IsHuman);
-                possessionIndicator.transform.position = new Vector3(p.x, 0.031f, p.y);
+                humanControlMarker.SetActive(source.IsHuman);
+                humanControlMarker.transform.position = new Vector3(p.x, 0.031f, p.y);
             }
             if (facingIndicator != null)
             {
@@ -137,56 +110,11 @@ namespace BeastSoccer.Presentation
                 flightIndicator.transform.localScale = new Vector3(.055f, Mathf.Max(.25f, extraHeight * .5f), .055f);
             }
 
-            bool ultActive = source.Ult != null && (source.Ult.IsActive || source.Ult.IsActivating);
-            UpdateUltGlow(ultActive);
-            // Old solid ground ult discs are deliberately suppressed; the sprite-edge glow is the tell.
-            if (ultAttackIndicator != null) ultAttackIndicator.SetActive(false);
-            if (ultDefenseIndicator != null) ultDefenseIndicator.SetActive(false);
-        }
-
-        private void EnsureUltGlow()
-        {
-            if (ultGlowRenderer != null || spriteRenderer == null) return;
-            var go = new GameObject(name + "_ULT_GLOW");
-            go.transform.SetParent(transform, false);
-            go.transform.localPosition = Vector3.zero;
-            go.transform.localRotation = Quaternion.identity;
-            ultGlowRenderer = go.AddComponent<SpriteRenderer>();
-            ultGlowRenderer.enabled = false;
-        }
-
-        private void UpdateUltGlow(bool active)
-        {
-            EnsureUltGlow();
-            if (ultGlowRenderer == null || spriteRenderer == null) return;
-            ultGlowRenderer.enabled = active && spriteRenderer.sprite != null;
-            if (!ultGlowRenderer.enabled) return;
-
-            ultGlowRenderer.sprite = spriteRenderer.sprite;
-            ultGlowRenderer.flipX = spriteRenderer.flipX;
-            ultGlowRenderer.flipY = spriteRenderer.flipY;
-            ultGlowRenderer.sortingLayerID = spriteRenderer.sortingLayerID;
-            ultGlowRenderer.sortingOrder = spriteRenderer.sortingOrder - 1;
-            float pulse = 1.055f + Mathf.Sin(Time.time * 7.5f) * 0.018f;
-            ultGlowRenderer.transform.localScale = new Vector3(pulse, pulse, 1f);
-            Color c = source.Character == CharacterType.Leo ? new Color(1f,.30f,.06f,.28f)
-                : source.Character == CharacterType.Goro ? new Color(.22f,1f,.32f,.28f)
-                : source.Character == CharacterType.Volt ? new Color(.16f,.74f,1f,.30f)
-                : new Color(.75f,.45f,1f,.24f);
-            ultGlowRenderer.color = c;
         }
 
         public void ApplyCharacter()
         {
             if (source == null || visualLibrary == null) return;
-            if (!authoredScaleCaptured)
-            {
-                authoredLocalScale = transform.localScale;
-                authoredScaleCaptured = true;
-            }
-            float characterScale = source.Character == CharacterType.Volt ? 0.90f : 1f;
-            float duelScale = DuelRules.Enabled ? DemoMatchRules.PlayerScale : 1f;
-            transform.localScale = authoredLocalScale * characterScale * duelScale;
             visualLibrary.Apply(source.Character, source.Side, spriteRenderer, animator, animationDriver);
         }
 

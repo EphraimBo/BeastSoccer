@@ -4,23 +4,13 @@ using UnityEngine.UI;
 namespace BeastSoccer.UI
 {
     // Resolution-independent rings and thumb-following arcs, without a filled glow disc.
-    // V12.5.1: ArcGraphic is a UI Graphic, so every instance must have CanvasRenderer.
+    // ArcGraphic is a UI Graphic, so every instance must have CanvasRenderer.
     [RequireComponent(typeof(CanvasRenderer))]
     public class ArcGraphic : MaskableGraphic
     {
         public float thickness = 5f;
         public float sweep = 360f;
         public float angle;
-
-        protected override void Awake()
-        {
-            // RequireComponent protects new instances. This also repairs older scene
-            // instances created before the requirement was added.
-            if (GetComponent<CanvasRenderer>() == null)
-                gameObject.AddComponent<CanvasRenderer>();
-
-            base.Awake();
-        }
 
         protected override void OnPopulateMesh(VertexHelper vh)
         {

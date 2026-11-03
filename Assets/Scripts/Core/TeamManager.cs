@@ -44,6 +44,10 @@ namespace BeastSoccer.Core
             var aspc = SpecialFor(TeamSide.Away);
             if (hs != null) hs.ConfigureCharacter(homeSpecial);
             if (aspc != null) aspc.ConfigureCharacter(awaySpecial);
+            foreach (var player in AllPlayers)
+                if (player != null && player != hs && player != aspc &&
+                    !(DuelRules.Enabled && player.Role == FieldRole.Goalkeeper))
+                    player.ConfigureCharacter(player.Character);
             AssignGenericNumbers(HomeTeam);
             AssignGenericNumbers(AwayTeam);
             EnsureTacticalRoles(HomeTeam, TeamSide.Home);
@@ -68,7 +72,7 @@ namespace BeastSoccer.Core
                     if (p.Visual != null)
                     {
                         var v=p.Visual;
-                        foreach(var marker in new GameObject[] {v.controlledIndicator,v.possessionIndicator,v.flightIndicator,v.ultAttackIndicator,v.ultDefenseIndicator})
+                        foreach(var marker in new GameObject[] {v.humanControlMarker,v.flightIndicator})
                             if(marker!=null) marker.SetActive(false);
                         if(v.shadow!=null) v.shadow.gameObject.SetActive(false);
                         if(v.facingIndicator!=null) v.facingIndicator.gameObject.SetActive(false);

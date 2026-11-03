@@ -59,7 +59,7 @@ namespace BeastSoccer.Core
         {
             var special = TeamManager.Instance != null ? TeamManager.Instance.SpecialFor(side) : null;
             if (special == null || special.Ult == null || GameConfig.Instance == null) return;
-            // FIX38: any goal by this team fills its special character's ultimate completely.
+            // any goal by this team fills its special character's ultimate completely.
             special.Ult.AddCharge(Mathf.Max(0f, GameConfig.Instance.ultChargeGoal));
         }
     }

@@ -94,7 +94,7 @@ namespace BeastSoccer.Ball
             }
         }
 
-        public bool SetOwner(PlayerController p, bool force = false)
+        public bool SetOwner(PlayerController p)
         {
             if (p == null) return false;
             // Home outfield possession is always player-controlled. There is no autonomous
@@ -109,7 +109,7 @@ namespace BeastSoccer.Ball
             arcPeak = 0f;
             groundBouncesRemaining = 0;
             if (p.Role == FieldRole.Goalkeeper)
-                p.SetKeeperHold(DuelRules.Enabled ? DemoMatchRules.KeeperHoldSeconds : GameConfig.Instance.keeperPossessionSeconds);
+                p.SetKeeperHold(DuelRules.Enabled ? GameConfig.Instance.duelKeeperHoldSeconds : GameConfig.Instance.keeperPossessionSeconds);
             LastTouch = p;
             LastKickType = KickType.None;
             LastKickWasUltShot = false;
@@ -187,7 +187,7 @@ namespace BeastSoccer.Ball
             pendingHumanPassReceiverUntil = targetedDistribution
                 ? Time.time + Mathf.Max(0.4f, GameConfig.Instance.intendedReceiverAssistSeconds)
                 : 0f;
-            // FIX26: lobbed passes/crosses and throw-ins are deliberately receiver-locked.
+            // lobbed passes/crosses and throw-ins are deliberately receiver-locked.
             // Ground passes retain the softer assist so they still feel free/physical.
             // Fast keeper throws need a landing target as well as launch speed. Otherwise the
             // ball keeps travelling after passing the receiver and can clear the touchline.
@@ -201,7 +201,7 @@ namespace BeastSoccer.Ball
             bool fastKeeperOutlet = DuelRules.Enabled && kicker.Role == FieldRole.Goalkeeper && type == KickType.Lob;
             // Keeper outlets have their own direct launch profile. Applying the global shot boost
             // made the arc last longer and read like a hovering ball rather than a quick throw.
-            if (DuelRules.Enabled && !fastKeeperOutlet) force *= DemoMatchRules.BallSpeedBoost;
+            if (DuelRules.Enabled && !fastKeeperOutlet) force *= GameConfig.Instance.duelBallSpeedMultiplier;
             rb.linearVelocity = direction * force;
             if (switchToReceiver && TeamManager.Instance != null)
                 TeamManager.Instance.SetHuman(intendedReceiver, false, true);
@@ -577,7 +577,7 @@ namespace BeastSoccer.Ball
             var config = GameConfig.Instance;
             if (config == null) return target;
             // Keep the whole enlarged visual ball inside the pitch at landing.
-            float margin = Mathf.Max(.75f, config.ballVisualRadius * DemoMatchRules.BallScale + .20f);
+            float margin = Mathf.Max(.75f, config.ballVisualRadius * config.duelBallScale + .20f);
             float halfLength = Mathf.Max(.1f, config.pitchLength * .5f - margin);
             float halfWidth = Mathf.Max(.1f, config.pitchWidth * .5f - margin);
             return new Vector2(Mathf.Clamp(target.x, -halfLength, halfLength),

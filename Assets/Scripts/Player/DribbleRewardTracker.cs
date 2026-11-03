@@ -14,6 +14,7 @@ namespace BeastSoccer.Player
         private void Awake(){player=GetComponent<PlayerController>();}
         private void Update()
         {
+            if(GameConfig.Instance == null || GameConfig.Instance.ultChargePerAction <= 0f) return;
             if(Time.time<cooldownUntil || player==null || !player.HasBall || GameManager.Instance==null || GameManager.Instance.Phase!=MatchPhase.Playing){candidate=null;return;}
             int dir=TeamManager.Instance.AttackDirFor(player.Side);
             if(candidate==null)

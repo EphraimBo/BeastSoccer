@@ -17,9 +17,15 @@ namespace BeastSoccer.Input
                 UnityEngine.Input.GetAxisRaw("Horizontal"),
                 UnityEngine.Input.GetAxisRaw("Vertical")
             );
+#elif ENABLE_INPUT_SYSTEM
+            var keyboard = UnityEngine.InputSystem.Keyboard.current;
+            if (keyboard == null) return Vector2.zero;
+            return new Vector2(
+                (keyboard.dKey.isPressed || keyboard.rightArrowKey.isPressed ? 1f : 0f) -
+                (keyboard.aKey.isPressed || keyboard.leftArrowKey.isPressed ? 1f : 0f),
+                (keyboard.wKey.isPressed || keyboard.upArrowKey.isPressed ? 1f : 0f) -
+                (keyboard.sKey.isPressed || keyboard.downArrowKey.isPressed ? 1f : 0f));
 #else
-            // Touch UI remains fully testable in Play Mode. Keyboard debug input is
-            // intentionally disabled when Unity has legacy input turned off.
             return Vector2.zero;
 #endif
         }
@@ -28,6 +34,9 @@ namespace BeastSoccer.Input
         {
 #if ENABLE_LEGACY_INPUT_MANAGER
             return UnityEngine.Input.GetKey(KeyCode.LeftShift) || UnityEngine.Input.GetKey(KeyCode.RightShift);
+#elif ENABLE_INPUT_SYSTEM
+            var keyboard = UnityEngine.InputSystem.Keyboard.current;
+            return keyboard != null && (keyboard.leftShiftKey.isPressed || keyboard.rightShiftKey.isPressed);
 #else
             return false;
 #endif
@@ -37,6 +46,23 @@ namespace BeastSoccer.Input
         {
 #if ENABLE_LEGACY_INPUT_MANAGER
             return UnityEngine.Input.GetKeyDown(key);
+#elif ENABLE_INPUT_SYSTEM
+            var keyboard = UnityEngine.InputSystem.Keyboard.current;
+            if (keyboard == null) return false;
+            switch (key)
+            {
+                case KeyCode.Escape: return keyboard.escapeKey.wasPressedThisFrame;
+                case KeyCode.Space: return keyboard.spaceKey.wasPressedThisFrame;
+                case KeyCode.Tab: return keyboard.tabKey.wasPressedThisFrame;
+                case KeyCode.E: return keyboard.eKey.wasPressedThisFrame;
+                case KeyCode.Q: return keyboard.qKey.wasPressedThisFrame;
+                case KeyCode.F: return keyboard.fKey.wasPressedThisFrame;
+                case KeyCode.R: return keyboard.rKey.wasPressedThisFrame;
+                case KeyCode.C: return keyboard.cKey.wasPressedThisFrame;
+                case KeyCode.X: return keyboard.xKey.wasPressedThisFrame;
+                case KeyCode.V: return keyboard.vKey.wasPressedThisFrame;
+                default: return false;
+            }
 #else
             return false;
 #endif

@@ -58,7 +58,6 @@ namespace BeastSoccer.Core
                 OpponentCharacter = DuelRules.Outfielder(OpponentCharacter, CharacterType.Volt);
             }
             TeamManager.Instance?.ApplyCharacterSelections(PlayerCharacter, OpponentCharacter);
-            if (DuelRules.Enabled) gameObject.AddComponent<BeastSoccer.Presentation.DuelPitchPresentation>();
             MatchTimer.Instance?.PauseClock();
             if (Mode == GameMode.Defending) RoundReset.Instance?.ResetDefendingRound();
             else RoundReset.Instance?.ResetForKickoff(TeamSide.Home);
@@ -67,7 +66,7 @@ namespace BeastSoccer.Core
 
         private void ApplyRuntimeSetup()
         {
-            // FIX21: menu choices are authoritative when a match is launched from MainMenu.
+            // menu choices are authoritative when a match is launched from MainMenu.
             // If Match is opened directly for debugging, keep the values visible on GameManager
             // in the Inspector instead of silently forcing the static Leo/Goro defaults.
             if (!MatchSetup.HasExplicitSelection) return;

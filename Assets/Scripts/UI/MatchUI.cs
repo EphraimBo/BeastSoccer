@@ -40,7 +40,7 @@ namespace BeastSoccer.UI
         private void Start()
         {
             ApplyOverlayMenuTypography();
-            DuelHud.Install(this);
+            GetComponent<DuelHud>()?.Initialize(this);
             ConfigureUltChargeMeter();
             if (ultMeterFill != null && ultMeterFill.rectTransform != null)
                 ultMeterMaxWidth = Mathf.Max(1f, ultMeterFill.rectTransform.sizeDelta.x);
@@ -115,7 +115,7 @@ namespace BeastSoccer.UI
 
         private void ConfigureUltChargeMeter()
         {
-            // FIX40: match the stamina-bar implementation. The visible fill RectTransform itself
+            // match the stamina-bar implementation. The visible fill RectTransform itself
             // grows/shrinks horizontally, so this works even when the supplied UI art is not a
             // Unity Filled Image and preserves the user's edited placement/height.
             if (ultMeterFill != null)
@@ -265,7 +265,7 @@ namespace BeastSoccer.UI
             switch (next)
             {
                 case ActionContext.HumanHasBall:
-                    // FIX21: keep the attacking cluster intentionally simple: SHOOT / PASS / LOB.
+                    // keep the attacking cluster intentionally simple: SHOOT / PASS / LOB.
                     SetActionButton(primaryButton, primaryLabel, "", shootButtonSprite, Color.white);
                     SetActionButton(secondaryButton, secondaryLabel, "", passButtonSprite, Color.white);
                     SetActionButton(tertiaryButton, tertiaryLabel, "", lobButtonSprite, Color.white);
@@ -299,7 +299,7 @@ namespace BeastSoccer.UI
             bool active = ult != null && (ult.IsActive || ult.IsActivating);
             float meter01 = active && ult != null ? ult.ActiveFractionRemaining : Mathf.Clamp01(charge);
 
-            // FIX40: same behavior as the sprint stamina bar: physically resize the existing
+            // same behavior as the sprint stamina bar: physically resize the existing
             // positioned fill object. Charge grows 0 -> 100%; active ult drains 100% -> 0%.
             if (ultMeterFill != null)
             {
@@ -376,7 +376,7 @@ namespace BeastSoccer.UI
             bool attackingUlt = ult.IsActive && !ult.IsActivating && ult.IsAttackingVariant;
             if (human.Character == CharacterType.Volt)
             {
-                // FIX32: the same special-action button changes with possession. In attack it is FLY;
+                // the same special-action button changes with possession. In attack it is FLY;
                 // without possession it becomes BLOCK and expands Volt's wings into a defensive wall.
                 bool teamHasBall = ult.TeamHasPossession();
                 if (teamHasBall)
@@ -419,7 +419,7 @@ namespace BeastSoccer.UI
 
         private void RefreshLob()
         {
-            // FIX21: LOB now occupies the stable tertiary action slot. Any legacy standalone
+            // LOB now occupies the stable tertiary action slot. Any legacy standalone
             // lob button from an older scene is hidden so the HUD never shows duplicate controls.
             if (lobButton != null) lobButton.gameObject.SetActive(false);
         }
@@ -469,7 +469,7 @@ namespace BeastSoccer.UI
             bool active = ult != null && (ult.IsActive || ult.IsActivating);
             Color c = special != null ? CharacterColor(special.Character) : Color.white;
 
-            // FIX22: no full-screen ult tint/flash. Ult readability is carried by the character glow
+            // no full-screen ult tint/flash. Ult readability is carried by the character glow
             // and the persistent ULT button/meter instead of an overlay covering gameplay.
             wasUltActive = active;
             ultFlashAlpha = 0f;

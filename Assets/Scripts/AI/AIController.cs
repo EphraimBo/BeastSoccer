@@ -32,8 +32,6 @@ namespace BeastSoccer.AI
         private float duelDisengageUntil;
         private Vector2 duelDisengageTarget;
         private float nextTackleAllowed;
-        private PlayerController kickoffReturnTarget;
-        private float kickoffReturnAt;
         private float keeperOutletBurstUntil;
         private float nextDuelUltCheck;
 
@@ -118,8 +116,6 @@ namespace BeastSoccer.AI
             duelDisengageUntil = 0f;
             duelDisengageTarget = Vector2.zero;
             nextTackleAllowed = 0f;
-            kickoffReturnTarget = null;
-            kickoffReturnAt = 0f;
             keeperOutletBurstUntil = 0f;
             nextDuelUltCheck = 0f;
             ForceImmediateDecision();
@@ -130,16 +126,9 @@ namespace BeastSoccer.AI
             if (player == null || player.IsHuman || player.IsSuppressed || GameManager.Instance == null || GameManager.Instance.Phase != MatchPhase.Playing)
                 return;
 
-            TryUseDuelUltimate();
+            TryUseUltimate(UltimateTrigger.RegularDuel);
 
             bool hasBallNow = player.HasBall;
-            // Home outfielders never autonomously pass or shoot. If one wins/receives possession,
-            // control immediately transfers to that player and the previous human becomes AI.
-            if (hasBallNow && player.Side == TeamSide.Home && player.Role != FieldRole.Goalkeeper)
-            {
-                TeamManager.Instance?.SetHuman(player, false, true);
-                return;
-            }
             if (hasBallNow && !hadBallLastStep)
             {
                 possessionCommitUntil = Time.time + GameConfig.Instance.aiReceiveCommitSeconds;
@@ -165,19 +154,8 @@ namespace BeastSoccer.AI
                     keeperOutletBurstUntil = Time.time + Mathf.Max(0.2f, GameConfig.Instance.aiKeeperOutletBurstSeconds);
                     possessionCommitUntil = Mathf.Max(possessionCommitUntil, keeperOutletBurstUntil);
                     player.ProtectPossession(Mathf.Max(0.2f, GameConfig.Instance.aiKeeperOutletProtectionSeconds));
-                    if (player.Ult != null && player.Ult.Charge >= 0.999f)
-                        player.Ult.TryActivateAI();
+                    TryUseUltimate(UltimateTrigger.KeeperOutlet);
                     ForceImmediateDecision();
-                }
-
-                // The one exception to the normal no-return-pass rule: the first recipient from a
-                // centre kickoff deliberately gives the ball straight back to the original kicker.
-                if (RoundReset.Instance != null && RoundReset.Instance.TryGetKickoffReturnTarget(player, out var returnTo))
-                {
-                    kickoffReturnTarget = returnTo;
-                    kickoffReturnAt = Time.time + GameConfig.Instance.kickoffReturnDelay;
-                    possessionCommitUntil = Mathf.Min(possessionCommitUntil, kickoffReturnAt);
-                    player.ProtectPossession(GameConfig.Instance.kickoffReturnDelay + 0.30f);
                 }
 
                 var nearbyOpponent = ClosestOpponent(transform.position, false);
@@ -202,26 +180,6 @@ namespace BeastSoccer.AI
 
             if (!hasBallNow && requestedAction != RequestedAction.None) ClearRequest();
 
-            if (hasBallNow && kickoffReturnTarget != null)
-            {
-                // Centre kickoff choreography: receive, settle for a fraction of a second, return
-                // the ball to the original kicker exactly once. No other AI decision can interrupt it.
-                SetSteering(Vector2.zero, false, false);
-                player.SetAIMove(Vector2.zero, false);
-                if (Time.time >= kickoffReturnAt)
-                {
-                    var target = kickoffReturnTarget;
-                    kickoffReturnTarget = null;
-                    kickoffReturnAt = 0f;
-                    if (target != null && target.Side == player.Side)
-                    {
-                        RoundReset.Instance?.CompleteKickoffReturn(player);
-                        player.AIKickTo(target, false);
-                    }
-                }
-                return;
-            }
-
             if (hasBallNow && player.Side == TeamSide.Away && player.Role != FieldRole.Goalkeeper && Time.time < keeperOutletBurstUntil)
             {
                 int burstDir = TeamManager.Instance.AttackDirFor(player.Side);
@@ -232,12 +190,7 @@ namespace BeastSoccer.AI
                 return;
             }
 
-            if (player.Role != FieldRole.Goalkeeper && player.Side == TeamSide.Away && player.Character != CharacterType.Generic && player.Ult != null &&
-                MatchTimer.Instance != null && MatchTimer.Instance.IsFinalStretch && player.Ult.Charge >= 0.999f &&
-                Random.value < GameConfig.Instance.finalStretchAIAutoUltChance * Time.fixedDeltaTime * 3f)
-            {
-                player.Ult.TryActivateAI();
-            }
+            TryUseUltimate(UltimateTrigger.FinalStretch);
 
             if (player.Role == FieldRole.Goalkeeper)
             {
@@ -261,17 +214,24 @@ namespace BeastSoccer.AI
             ApplySteering();
         }
 
-        private void TryUseDuelUltimate()
+        private enum UltimateTrigger { RegularDuel, KeeperOutlet, FinalStretch }
+
+        private void TryUseUltimate(UltimateTrigger trigger)
         {
-            if (!DuelRules.Enabled || player.Side != TeamSide.Away || player.Role == FieldRole.Goalkeeper ||
-                player.Ult == null || player.Ult.IsActive || player.Ult.IsActivating ||
-                player.Ult.Charge < .999f || Time.time < nextDuelUltCheck) return;
-            nextDuelUltCheck = Time.time + .5f;
-            var ball = BallControl.Instance;
-            // Spend ready ults during normal attacks/defence, instead of waiting for the
-            // final stretch or a keeper outlet. Don't waste them during a keeper's hold.
-            if (ball == null || (ball.Owner != null && ball.Owner.Role == FieldRole.Goalkeeper)) return;
-            if (ball.Owner == null && Vector2.Distance(player.transform.position, ball.transform.position) > 5f) return;
+            if (player.Side != TeamSide.Away || player.Role == FieldRole.Goalkeeper ||
+                player.Character == CharacterType.Generic || player.Ult == null ||
+                player.Ult.IsActive || player.Ult.IsActivating || player.Ult.Charge < .999f) return;
+            if (trigger == UltimateTrigger.RegularDuel)
+            {
+                if (!DuelRules.Enabled || Time.time < nextDuelUltCheck) return;
+                nextDuelUltCheck = Time.time + .5f;
+                var ball = BallControl.Instance;
+                if (ball == null || (ball.Owner != null && ball.Owner.Role == FieldRole.Goalkeeper)) return;
+                if (ball.Owner == null && Vector2.Distance(player.transform.position, ball.transform.position) > 5f) return;
+            }
+            else if (trigger == UltimateTrigger.FinalStretch &&
+                (MatchTimer.Instance == null || !MatchTimer.Instance.IsFinalStretch ||
+                 Random.value >= GameConfig.Instance.finalStretchAIAutoUltChance * Time.fixedDeltaTime * 3f)) return;
             player.Ult.TryActivateAI();
         }
 

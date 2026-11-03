@@ -34,7 +34,7 @@ namespace BeastSoccer.AI
             // back-pass loops where the keeper immediately reclaimed its own team's pass.
             if (!opponentThreat && !neutral) return;
 
-            // FIX22: an ult-powered shot is harder for the keeper to read/save. The failure roll is
+            // an ult-powered shot is harder for the keeper to read/save. The failure roll is
             // made once per contact window; cooldown prevents OnTriggerStay from re-rolling every frame.
             if (opponentThreat && ball.LastKickWasUltShot && ball.LastKickType == KickType.Shot &&
                 Random.value < GameConfig.Instance.ultShotKeeperMissChance)

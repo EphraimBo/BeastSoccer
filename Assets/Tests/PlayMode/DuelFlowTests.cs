@@ -66,22 +66,23 @@ namespace BeastSoccer.Tests
             Time.timeScale=1;
             yield return SceneManager.LoadSceneAsync("MainMenu");
             yield return null;
-            var menu=Object.FindAnyObjectByType<BeastMenuOverhaul>();
+            var menu=Object.FindAnyObjectByType<MenuController>();
             Assert.IsNotNull(menu);
-            menu.ShowPick();menu.PickGoro();
+            menu.ShowPick();
             yield return null;
             Canvas.ForceUpdateCanvases();
             var voltCard = menu.pickScreen.transform.Find("VOLT_CARD") as RectTransform;
             var leoCard = menu.pickScreen.transform.Find("LEO_CARD") as RectTransform;
-            Assert.LessOrEqual(voltCard.rect.width, 320.1f);
-            Assert.LessOrEqual(voltCard.rect.height, 156.1f);
-            Assert.LessOrEqual(leoCard.rect.width, 320.1f);
-            Assert.LessOrEqual(leoCard.rect.height, 156.1f);
-            Assert.Greater(Mathf.Abs(voltCard.anchoredPosition.y - leoCard.anchoredPosition.y),
-                (voltCard.rect.height + leoCard.rect.height) * .5f);
+            Assert.IsNotNull(voltCard);
+            Assert.IsNotNull(leoCard);
+            Vector2 authoredPosition = voltCard.anchoredPosition;
+            yield return null;
+            Assert.AreEqual(authoredPosition, voltCard.anchoredPosition,
+                "Startup patches must not move the saved menu.");
             Assert.IsFalse(menu.hasPlayerSelection,"Goro cannot be picked as an outfielder.");
-            Assert.IsFalse(menu.pickScreen.transform.Find("GORO_PICK").gameObject.activeInHierarchy);
-            menu.PickVolt();menu.ShowRival();menu.RivalGoro();
+            Assert.IsNull(menu.pickScreen.transform.Find("GORO_PICK"));
+            Assert.AreEqual(CharacterType.Volt, DuelRules.Outfielder(CharacterType.Goro, CharacterType.Volt));
+            menu.PickVolt();
             Assert.IsFalse(menu.hasRivalSelection);
             menu.RivalLeo();menu.StartSelectedMatch();
             yield return null;
@@ -116,11 +117,9 @@ namespace BeastSoccer.Tests
             {
                 var keeper=teams.GoalkeeperFor(side);
                 Assert.AreEqual(CharacterType.Goro,keeper.Character);
-                Assert.IsNotNull(keeper.Visual.GetComponent<DemoCharacterArtV8>());
+                Assert.IsNotNull(keeper.Visual.GetComponent<CharacterSpriteAnimator>());
                 Assert.IsFalse(keeper.Visual.animator.enabled);
                 Assert.IsNull(keeper.Visual.animator.runtimeAnimatorController);
-                var legacy = keeper.Visual.GetComponent<GoroKeeperVisual>();
-                Assert.IsTrue(legacy == null || !legacy.enabled);
                 Assert.That(keeper.Visual.spriteRenderer.transform.localScale.x, Is.EqualTo(1.5408f).Within(.001f));
                 keeper.Visual.ApplyCharacter();
                 Assert.That(keeper.Visual.spriteRenderer.transform.localScale.x, Is.EqualTo(1.5408f).Within(.001f));

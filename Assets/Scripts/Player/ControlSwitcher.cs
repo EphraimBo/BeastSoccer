@@ -43,7 +43,7 @@ namespace BeastSoccer.Player
 
             var current = TeamManager.Instance.CurrentHuman();
 
-            // FIX37: while defending, SWITCH uses a deliberate three-player cycle instead of
+            // while defending, SWITCH uses a deliberate three-player cycle instead of
             // always jumping to the nearest defender:
             //   Special -> closest-to-ball -> remaining outfielder -> Special.
             // If control is currently on some unexpected player, the first press returns to Special.

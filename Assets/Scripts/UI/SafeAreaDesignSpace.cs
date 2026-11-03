@@ -11,16 +11,22 @@ namespace BeastSoccer.UI
 
         private void OnEnable()
         {
+            lastParentSize = new Vector2(-1f, -1f);
             Canvas.willRenderCanvases += Fit;
             Fit();
         }
         private void OnDisable() => Canvas.willRenderCanvases -= Fit;
-        private void LateUpdate() => Fit();
+
+        private Vector2 lastParentSize = new Vector2(-1f, -1f);
+        private Vector2 lastMinimumSize;
 
         private void Fit()
         {
             var parent = transform.parent as RectTransform;
             if (parent == null || parent.rect.width <= 0 || parent.rect.height <= 0) return;
+            if (parent.rect.size == lastParentSize && minimumSize == lastMinimumSize) return;
+            lastParentSize = parent.rect.size;
+            lastMinimumSize = minimumSize;
             float scale = Mathf.Min(parent.rect.width / Mathf.Max(1, minimumSize.x),
                 parent.rect.height / Mathf.Max(1, minimumSize.y));
             var rt = (RectTransform)transform;

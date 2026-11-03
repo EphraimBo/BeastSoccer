@@ -58,7 +58,7 @@ namespace BeastSoccer.Player
 
         private void Update()
         {
-            // FIX32: BLOCK is the defensive counterpart to FLY. If possession comes back to Volt's
+            // BLOCK is the defensive counterpart to FLY. If possession comes back to Volt's
             // team, drop the expanded-wing barrier immediately so the same button can become FLY.
             if (IsWingBlockActive && (player == null || !IsActive || TeamHasPossession() || GameManager.Instance == null || GameManager.Instance.Phase != MatchPhase.Playing))
                 EndVoltBlock();
@@ -244,7 +244,7 @@ namespace BeastSoccer.Player
                     }
                     else
                     {
-                        // FIX32: defensive Volt no longer receives an always-on wall. BLOCK is a
+                        // defensive Volt no longer receives an always-on wall. BLOCK is a
                         // deliberate special-action press, mirroring the way FLY is triggered in attack.
                         IsWingBlockActive = false;
                         if (wingBlockCollider != null) wingBlockCollider.enabled = false;

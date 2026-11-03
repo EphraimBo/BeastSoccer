@@ -16,6 +16,13 @@ namespace BeastSoccer.CameraSystem
         [Range(0.7f, 1.1f)]
         public float cameraDistanceScale = 0.8f;
 
+        [Tooltip("Rendered duel lens. Framing uses the original fit lens to preserve the approved zoom.")]
+        public float duelFieldOfView = 39.5f;
+        [Tooltip("Reference lens used to calculate the existing pitch envelope.")]
+        public float duelFramingFieldOfView = 46f;
+        [Tooltip("Additional approved duel zoom, previously applied by a global patch.")]
+        public float duelZoomScale = 0.78f;
+
         private Vector3 shakeOffset;
         private Vector3 smoothPosition;
         private bool initialized;
@@ -26,6 +33,8 @@ namespace BeastSoccer.CameraSystem
             cam = GetComponent<Camera>();
             cam.orthographic = false;
             cam.fieldOfView = 46f;
+            cam.transparencySortMode = TransparencySortMode.CustomAxis;
+            cam.transparencySortAxis = new Vector3(0f, 0f, 1f);
 
             smoothPosition = transform.position;
 
@@ -132,7 +141,7 @@ namespace BeastSoccer.CameraSystem
             if (DuelRules.Enabled)
             {
                 cam.orthographic = false;
-                cam.fieldOfView = 46f;
+                cam.fieldOfView = duelFieldOfView;
                 cam.rect = new Rect(0, 0, 1, 1);
 
                 var cfg = GameConfig.Instance;
@@ -158,7 +167,7 @@ namespace BeastSoccer.CameraSystem
                 desired = FitBoundsPosition(
                     bounds,
                     Quaternion.Euler(cfg.cameraAngle, 0, 0),
-                    cam.fieldOfView,
+                    duelFramingFieldOfView,
                     cam.aspect,
                     playingView
                 );
@@ -168,7 +177,7 @@ namespace BeastSoccer.CameraSystem
                 desired =
                     bounds.center +
                     (desired - bounds.center) *
-                    cameraDistanceScale;
+                    cameraDistanceScale * duelZoomScale;
 
                 return true;
             }
