@@ -10,6 +10,13 @@ namespace BeastSoccer.UI
         public GameObject panel;
         public string mainMenuScene = "MainMenu";
         private bool bound;
+        private bool previousMenus;
+        private void Update()
+        {
+            bool menus = BeastSoccer.Upgrades.UpgradeSettings.Menus;
+            if (menus != previousMenus && GameManager.Instance != null) Handle(GameManager.Instance.Phase);
+            previousMenus = menus;
+        }
 
         private void OnEnable() => Bind();
         private void Start() => Bind();
@@ -30,6 +37,7 @@ namespace BeastSoccer.UI
 
         private void Handle(MatchPhase p)
         {
+            if (BeastSoccer.Upgrades.UpgradeSettings.Menus) { if (panel != null) panel.SetActive(false); return; }
             if (panel != null) panel.SetActive(p == MatchPhase.Paused);
         }
 

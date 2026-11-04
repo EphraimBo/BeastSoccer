@@ -159,6 +159,40 @@ for name, info in locked.items():
     for dependency in info.get('dependencies', {}):
         check(dependency in locked, f'Incomplete package graph: {name} -> {dependency}')
 
+# Progression build: exact authored routes, settings and required scene bindings.
+settings_path = ROOT / 'Assets/Resources/UpgradeSettings.asset'
+if settings_path.exists():
+    settings = documents(settings_path)[11400000][1]
+    check(settings['unownedMapBrightness'] <= .2, 'Locked map previews must stay dark.')
+    check([(p['id'], p['completedMatches'], p['coinCost']) for p in settings['pitches']] ==
+          [('base', 0, 0), ('lion', 3, 500), ('bird', 9, 500), ('gorilla', 27, 500), ('snake', 81, 500)],
+          'Pitch gates, order or prices differ from the build plan.')
+    check([d['difficulty'] for d in settings['difficulties']] == [0, 1, 2, 3], 'Four AI profiles required.')
+    check(all(settings[k] == 1 for k in ['enableUpgrades','enableMenus','enableRewards','enablePitchSkins','enableTacticalAI','enableReadableKeepers']), 'Upgrade modules must ship enabled.')
+    def components(name, script):
+        g = next(g for g,p in guid_paths.items() if p.name == script + '.cs')
+        return [d for k,d in scenes[name].values() if k == 114 and d.get('m_Script', {}).get('guid') == g]
+    menu = components('MainMenu', 'ExpandedMenuController')
+    check(len(menu) == 1, 'Exactly one expanded menu controller required.')
+    if menu:
+        menu = menu[0]
+        for field in ['expandedRoot','legacyRoot','homePage','beastPage','rivalPage','mapPage','storePage','walletText','titleText','matchupText','mapSelectionText','storeName','storeRequirement','storePrice','storeNotice','storeBackLabel','storePreview','storeButton','selectMapButton','buyButton','buyLabel']:
+            check(menu.get(field, {}).get('fileID', 0) != 0, 'Unbound menu field: ' + field)
+        for field, count in [('mapTiles',5),('storeTiles',4),('difficultyButtons',4),('rivalButtons',2)]:
+            check(len(menu[field]) == count and all(x['fileID'] != 0 for x in menu[field]), 'Invalid menu bindings: ' + field)
+    for name, counts in [('MainMenu', [('PitchTileView',9)]), ('Match', [('TacticalOpponent',8),('ReadableGoalkeeper',2),('MatchRewards',1),('SelectedPitchPresentation',1),('MatchUpgradeUI',1)])]:
+        for script, count in counts:
+            check(len(components(name,script)) == count, 'Wrong component count: ' + name + '/' + script)
+    for data in components('Match','MatchUpgradeUI'):
+        for field in ['coinRoot','resultRoot','pauseRoot','pauseButtonRoot','legacyPauseButton','coins','earnings','rewardBreakdown','savedLabel','resultScore','resultDetails','pauseDifficulty']:
+            check(data.get(field,{}).get('fileID',0) != 0, 'Unbound match UI field: ' + field)
+        coin_go = data['coinRoot']['fileID']
+        coin_components = scenes['Match'][coin_go][1]['m_Component']
+        check(not any(scenes['Match'][c['component']['fileID']][1].get('m_Script',{}).get('guid') == 'fe87c0e1cc204ed48ad3b37840f39efc' for c in coin_components), 'Live coins must float without a background image.')
+    for name in scenes:
+        for data in components(name,'UpgradeButtonFeedback'):
+            check(data.get('visual',{}).get('fileID',0) != 0, name + ': button feedback has no visual.')
+
 if errors:
     for error in errors:
         print('FAIL:', error)

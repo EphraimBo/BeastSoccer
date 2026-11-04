@@ -1,0 +1,144 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8b6f0f12ea285985a47bbbb4c4affbe8, type: 3}
+  m_Name: Upgrade Settings
+  m_EditorClassIdentifier: BeastSoccer.Runtime::BeastSoccer.Upgrades.UpgradeSettings
+  enableUpgrades: 1
+  enableMenus: 1
+  enableRewards: 1
+  enablePitchSkins: 1
+  enableTacticalAI: 1
+  enableReadableKeepers: 1
+  showKeeperDebug: 0
+  unownedMapBrightness: 0.16
+  matchCoins: 50
+  winCoins: 25
+  drawCoins: 10
+  goalCoins: 5
+  goalCap: 4
+  ultGoalBonus: 5
+  ultGoalCap: 2
+  tackleCoins: 1
+  tackleCap: 5
+  pitches:
+  - id: base
+    displayName: Original Pitch
+    completedMatches: 0
+    coinCost: 0
+    texture: {fileID: 2800000, guid: d4eb3814dd835c049f8f5d75ebba1f4f, type: 3}
+    preview: {fileID: 0}
+  - id: lion
+    displayName: Lion Pitch
+    completedMatches: 3
+    coinCost: 500
+    texture: {fileID: 2800000, guid: 846c8aec22b856048481ad950d3cf2f5, type: 3}
+    preview: {fileID: 0}
+  - id: bird
+    displayName: Bird Pitch
+    completedMatches: 9
+    coinCost: 500
+    texture: {fileID: 2800000, guid: f6e30d8255525502b3ff5ceac8596659, type: 3}
+    preview: {fileID: 0}
+  - id: gorilla
+    displayName: Gorilla Pitch
+    completedMatches: 27
+    coinCost: 500
+    texture: {fileID: 2800000, guid: 17c45d6daa245590bbc3ba688e3a47e6, type: 3}
+    preview: {fileID: 0}
+  - id: snake
+    displayName: Snake Pitch
+    completedMatches: 81
+    coinCost: 500
+    texture: {fileID: 2800000, guid: 80ef0bd63980552c81d002560bb57c5b, type: 3}
+    preview: {fileID: 0}
+  difficulties:
+  - difficulty: 0
+    decisionSeconds: 0.46
+    lookAheadSeconds: 0.3
+    directionSamples: 5
+    predictionWeight: 0.2
+    aimError: 0.7
+    tackleCooldown: 1.3
+    ultMinimumBenefit: 2.8
+    shotMinimumQuality: -0.2
+    keeper:
+      reactionSeconds: 0.24
+      trackingInterval: 0.22
+      moveSpeed: 2.7
+      standingReach: 0.32
+      diveDistance: 0.85
+      diveSeconds: 0.32
+      recoverySeconds: 0.9
+      maxCatchHeight: 1.1
+  - difficulty: 1
+    decisionSeconds: 0.22
+    lookAheadSeconds: 0.65
+    directionSamples: 9
+    predictionWeight: 0.7
+    aimError: 0.24
+    tackleCooldown: 0.8
+    ultMinimumBenefit: 1.8
+    shotMinimumQuality: 0.2
+    keeper:
+      reactionSeconds: 0.12
+      trackingInterval: 0.12
+      moveSpeed: 3.6
+      standingReach: 0.4
+      diveDistance: 1.15
+      diveSeconds: 0.25
+      recoverySeconds: 0.65
+      maxCatchHeight: 1.1
+  - difficulty: 2
+    decisionSeconds: 0.13
+    lookAheadSeconds: 0.95
+    directionSamples: 11
+    predictionWeight: 0.9
+    aimError: 0.12
+    tackleCooldown: 0.55
+    ultMinimumBenefit: 1.4
+    shotMinimumQuality: 0.28
+    keeper:
+      reactionSeconds: 0.08
+      trackingInterval: 0.09
+      moveSpeed: 4
+      standingReach: 0.4
+      diveDistance: 1.25
+      diveSeconds: 0.24
+      recoverySeconds: 0.55
+      maxCatchHeight: 1.1
+  - difficulty: 3
+    decisionSeconds: 0.075
+    lookAheadSeconds: 1.2
+    directionSamples: 13
+    predictionWeight: 1
+    aimError: 0.04
+    tackleCooldown: 0.35
+    ultMinimumBenefit: 1.1
+    shotMinimumQuality: 0.32
+    keeper:
+      reactionSeconds: 0.045
+      trackingInterval: 0.065
+      moveSpeed: 4.3
+      standingReach: 0.42
+      diveDistance: 1.4
+      diveSeconds: 0.23
+      recoverySeconds: 0.5
+      maxCatchHeight: 1.1
+  homeKeeper:
+    reactionSeconds: 0.12
+    trackingInterval: 0.12
+    moveSpeed: 3.6
+    standingReach: 0.4
+    diveDistance: 1.15
+    diveSeconds: 0.25
+    recoverySeconds: 0.65
+    maxCatchHeight: 1.1

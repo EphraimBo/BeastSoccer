@@ -37,6 +37,13 @@ namespace BeastSoccer.Ball
             bool recoveringGoalKick = DuelRules.Enabled && manager.Phase == MatchPhase.SetPiece &&
                 manager.CurrentSetPieceType == SetPieceType.GoalKick;
             if (manager.Phase != MatchPhase.Playing && !recoveringGoalKick) return false;
+            if (BeastSoccer.Upgrades.UpgradeSettings.Keepers)
+            {
+                var home = TeamManager.Instance.GoalkeeperFor(TeamSide.Home);
+                var away = TeamManager.Instance.GoalkeeperFor(TeamSide.Away);
+                if (home != null && home.KeeperBrain != null && home.KeeperBrain.TryCatch(ball) ||
+                    away != null && away.KeeperBrain != null && away.KeeperBrain.TryCatch(ball)) return false;
+            }
             var body = ball.GetComponent<Rigidbody2D>();
             Vector2 position = body != null ? body.position : (Vector2)ball.transform.position;
             foreach (var goal in goals)

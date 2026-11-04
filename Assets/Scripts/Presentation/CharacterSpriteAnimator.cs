@@ -189,6 +189,14 @@ namespace BeastSoccer.Presentation
 
         private void ChooseKeeperAnimation(BallControl ball, bool holding, out string action, out float fps, out bool loop, out float localTime)
         {
+            var keeper = player.KeeperBrain;
+            if (!holding && BeastSoccer.Upgrades.UpgradeSettings.Keepers && keeper != null && (keeper.IsDiving || keeper.IsRecovering))
+            {
+                action = keeper.IsDiving ? (keeper.DiveDirection < 0f ? "Dive_Near" : "Dive_Far") : "Recover";
+                fps = 20f; loop = false;
+                localTime = Time.time - keeper.DiveStartedAt - (keeper.IsRecovering ? keeper.Profile.diveSeconds : 0f);
+                return;
+            }
             if (player.VisualKickType == KickType.Lob && Time.time < player.VisualKickUntil)
             {
                 action = "Throw_ThreeQuarter";

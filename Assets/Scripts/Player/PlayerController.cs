@@ -6,6 +6,7 @@ using BeastSoccer.Ball;
 using BeastSoccer.AI;
 using BeastSoccer.Audio;
 using BeastSoccer.Presentation;
+using BeastSoccer.Upgrades;
 
 namespace BeastSoccer.Player
 {
@@ -25,6 +26,17 @@ namespace BeastSoccer.Player
         public DefensiveActions Defense { get; private set; }
 
         public bool HasBall => BallControl.Instance != null && BallControl.Instance.Owner == this;
+        public ReadableGoalkeeper KeeperBrain { get; private set; }
+        private Vector2? aiShotTarget;
+        public float EstimatedRunSpeed => GameConfig.Instance.baseMoveSpeed * GameConfig.Instance.gameplayPaceMultiplier * baseSpeed * UltMoveSpeedMultiplier();
+        public float EstimatedShotSpeed(float distance)
+        {
+            var c = GameConfig.Instance;
+            float force = Mathf.Clamp(c.shotBaseForce + distance * c.shotForcePerUnit, c.shotMinForce, c.shotMaxForce);
+            force *= baseShot * (Ult != null ? Ult.ShotMultiplier : 1f);
+            if (Ult != null && Ult.IsActive) force *= c.ultShotBallSpeedBonus;
+            return force * c.shotLaunchMultiplier * c.gameplayPaceMultiplier * (DuelRules.Enabled ? c.duelBallSpeedMultiplier : 1f);
+        }
         public bool IsSprinting { get; private set; }
         public bool IsActionLocked => actionLocked || defensiveActionLocked || kickBusy;
         public bool CanBeTackled => Time.time >= possessionProtectedUntil &&
@@ -101,6 +113,7 @@ namespace BeastSoccer.Player
             if (GameConfig.Instance != null) rb.linearDamping = GameConfig.Instance.playerLinearDamping;
             Ult = GetComponent<UltimateAbility>();
             Defense = GetComponent<DefensiveActions>();
+            KeeperBrain = GetComponent<ReadableGoalkeeper>();
         }
 
 
@@ -398,6 +411,8 @@ namespace BeastSoccer.Player
             float wingSpeed = 1f; // FIX32 BLOCK keeps Volt on normal ground movement speed.
             float speed = cfg.baseMoveSpeed * cfg.gameplayPaceMultiplier * baseSpeed * ultSpeed * externalSpeedMultiplier * wingSpeed;
             speed *= Mathf.Lerp(1f, cfg.sprintMultiplier, sprintBlend);
+            if (Role == FieldRole.Goalkeeper && !IsHuman && UpgradeSettings.Keepers && KeeperBrain != null && !HasBall)
+                speed = KeeperBrain.MoveSpeed;
 
             float gait = inputMagnitude <= 0.01f
                 ? 0f
@@ -478,6 +493,8 @@ namespace BeastSoccer.Player
             float wingSpeed = 1f; // FIX32 BLOCK keeps Volt on normal ground movement speed.
             float maxLegal = GameConfig.Instance.baseMoveSpeed * GameConfig.Instance.gameplayPaceMultiplier * baseSpeed * GameConfig.Instance.sprintMultiplier * ultSpeed * Mathf.Max(1f, externalSpeedMultiplier) * wingSpeed;
             maxLegal *= GameConfig.Instance.hardSpeedCapMultiplier;
+            if (Role == FieldRole.Goalkeeper && !IsHuman && UpgradeSettings.Keepers && KeeperBrain != null)
+                maxLegal = Mathf.Max(maxLegal, KeeperBrain.MoveSpeed);
             // Explicit, bounded shove effects (Goro bulldoze / keeper exclusion) may briefly move
             // a victim faster than their own sprint without being mistaken for the old speed bug.
             maxLegal = Mathf.Max(maxLegal, externalPushVelocity.magnitude * 1.05f);
@@ -669,6 +686,13 @@ namespace BeastSoccer.Player
             return type == KickType.Pass && GameManager.Instance.CanTakeKickoff(this);
         }
 
+        public void AIShootAt(Vector2 worldTarget)
+        {
+            if (IsHuman || !CanKick(KickType.Shot) || !DuelRules.CanScoreFrom(this)) return;
+            aiShotTarget = worldTarget;
+            StartKick(KickType.Shot, null, worldTarget - (Vector2)transform.position);
+        }
+
         private void StartKick(KickType type, PlayerController target, Vector2 aim)
         {
             if (kickRoutine != null) StopCoroutine(kickRoutine);
@@ -712,7 +736,9 @@ namespace BeastSoccer.Player
             // to be facing when the button was pressed 0.2 seconds earlier.
             if (type == KickType.Shot)
             {
-                finalAim = ShotDirection();
+                finalAim = !IsHuman && aiShotTarget.HasValue && UpgradeSettings.TacticalAI
+                    ? aiShotTarget.Value - (Vector2)transform.position : ShotDirection();
+                aiShotTarget = null;
             }
             else if (target != null && target.Side == Side)
             {
@@ -794,6 +820,7 @@ namespace BeastSoccer.Player
 
         private void CancelPendingKick()
         {
+            aiShotTarget = null;
             if (kickRoutine != null) StopCoroutine(kickRoutine);
             kickRoutine = null;
             kickBusy = false;
@@ -994,6 +1021,8 @@ namespace BeastSoccer.Player
 
         public void ResetForRestart()
         {
+            KeeperBrain?.ResetForRestart();
+            aiShotTarget = null;
             CancelPendingKick();
             if (flightRoutine != null) StopCoroutine(flightRoutine);
             if (goroChargeRoutine != null) StopCoroutine(goroChargeRoutine);

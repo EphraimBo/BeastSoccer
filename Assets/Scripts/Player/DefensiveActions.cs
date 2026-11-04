@@ -121,6 +121,7 @@ namespace BeastSoccer.Player
                     player.ApplyTackleFollowThrough(throughDir, followMult);
                     TeamManager.Instance?.AddTeamUltCharge(player.Side, GameConfig.Instance.ultChargePerAction);
                     AudioManager.Instance?.PlayTackle();
+                    BeastSoccer.Upgrades.MatchRewards.Instance?.SuccessfulTackle(player.Side);
                     GameFeel.Shake(0.13f);
                     return true;
                 }

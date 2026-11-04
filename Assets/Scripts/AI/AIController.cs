@@ -3,6 +3,7 @@ using BeastSoccer.Data;
 using BeastSoccer.Core;
 using BeastSoccer.Player;
 using BeastSoccer.Ball;
+using BeastSoccer.Upgrades;
 
 namespace BeastSoccer.AI
 {
@@ -34,8 +35,10 @@ namespace BeastSoccer.AI
         private float nextTackleAllowed;
         private float keeperOutletBurstUntil;
         private float nextDuelUltCheck;
+        private TacticalOpponent tactical;
+        private ReadableGoalkeeper readableKeeper;
 
-        private void Awake() { player = GetComponent<PlayerController>(); }
+        private void Awake() { player = GetComponent<PlayerController>(); tactical = GetComponent<TacticalOpponent>(); readableKeeper = GetComponent<ReadableGoalkeeper>(); }
         private void Start() { homeLaneY = transform.position.y; ForceImmediateDecision(); }
 
         public void RequestPass(PlayerController target, bool through = false)
@@ -104,6 +107,8 @@ namespace BeastSoccer.AI
 
         public void ResetBrain()
         {
+            tactical?.ResetForRestart();
+            readableKeeper?.ResetForRestart();
             ClearRequest();
             wideCarryUntil = 0f;
             wideCarryY = 0f;
@@ -126,6 +131,9 @@ namespace BeastSoccer.AI
             if (player == null || player.IsHuman || player.IsSuppressed || GameManager.Instance == null || GameManager.Instance.Phase != MatchPhase.Playing)
                 return;
 
+            if (player.Role == FieldRole.Goalkeeper && UpgradeSettings.Keepers && readableKeeper != null && readableKeeper.Tick()) return;
+            if (player.Role != FieldRole.Goalkeeper && player.Side == TeamSide.Away && UpgradeSettings.TacticalAI && tactical != null)
+            { tactical.Tick(); return; }
             TryUseUltimate(UltimateTrigger.RegularDuel);
 
             bool hasBallNow = player.HasBall;

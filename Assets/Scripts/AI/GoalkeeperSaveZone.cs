@@ -19,6 +19,7 @@ namespace BeastSoccer.AI
 
         private void TrySave(Collider2D other)
         {
+            if (BeastSoccer.Upgrades.UpgradeSettings.Keepers && keeper != null && !keeper.IsHuman) return;
             if (Time.time < cooldownUntil || keeper==null || keeper.Role!=FieldRole.Goalkeeper || keeper.IsWingBlocking || GameManager.Instance==null || GameManager.Instance.Phase!=MatchPhase.Playing) return;
             if(saveCollider!=null) saveCollider.radius=GameConfig.Instance.keeperSaveRadius;
             var ball=other.GetComponentInParent<BallControl>();

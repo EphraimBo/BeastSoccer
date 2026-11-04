@@ -455,8 +455,8 @@ namespace BeastSoccer.Ball
             {
                 var p = hit != null ? hit.GetComponentInParent<PlayerController>() : null;
                 if (p == null || p.IsSuppressed || p.IsActionLocked || p.IsWingBlocking || p.IsFlying) continue;
-                // All catches go through the save zone, including its one-roll miss cooldown.
-                if (DuelRules.Enabled && p.Role == FieldRole.Goalkeeper) continue;
+                // Dedicated AI keepers use their bounded save authority. Preserve human keeper modes.
+                if ((DuelRules.Enabled || BeastSoccer.Upgrades.UpgradeSettings.Keepers && !p.IsHuman) && p.Role == FieldRole.Goalkeeper) continue;
                 if (pendingReceiverHardLock && intendedWindow && p != pendingHumanPassReceiver) continue;
                 if (GameManager.Instance != null && GameManager.Instance.Mode == GameMode.Defending && p.Side == TeamSide.Home && p.Role != FieldRole.Goalkeeper) continue;
                 if (p.Role != FieldRole.Goalkeeper && LastKickType == KickType.Lob && !CanOutfieldControlLob(p)) continue;

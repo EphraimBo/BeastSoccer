@@ -12,6 +12,7 @@ namespace BeastSoccer.Core
         public TeamSide LastConcedingSide { get; private set; } = TeamSide.Away;
         public System.Action<int,int> OnScoreChanged;
         public System.Action<CharacterType> OnUltGoal;
+        public event System.Action<TeamSide, bool> GoalScored;
 
         private void Awake()
         {
@@ -31,6 +32,9 @@ namespace BeastSoccer.Core
             bool ultGoal = scorer != null && scorer.Ult != null && scorer.Ult.IsActive;
             CharacterType ultGoalCharacter = scorer != null ? scorer.Character : CharacterType.Generic;
             if (scoringSide == TeamSide.Home) HomeScore++; else AwayScore++;
+            var liveBall = BeastSoccer.Ball.BallControl.Instance;
+            bool rewardUltGoal = liveBall != null && liveBall.LastKickWasUltShot && liveBall.LastKicker != null && liveBall.LastKicker.Side == scoringSide;
+            GoalScored?.Invoke(scoringSide, rewardUltGoal);
             LastConcedingSide = scoringSide == TeamSide.Home ? TeamSide.Away : TeamSide.Home;
             OnScoreChanged?.Invoke(HomeScore, AwayScore);
             AwardGoalCharge(scoringSide, scorer);

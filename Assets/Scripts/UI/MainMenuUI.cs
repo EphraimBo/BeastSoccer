@@ -9,7 +9,12 @@ namespace BeastSoccer.UI
     public sealed class MainMenuUI : MonoBehaviour
     {
         public string matchScene = "Match";
-        private void Start() => GetComponent<MenuController>().Initialize(this);
+        private void Start()
+        {
+            var expanded = GetComponent<BeastSoccer.Upgrades.ExpandedMenuController>();
+            if (expanded != null) expanded.Initialize(this);
+            else GetComponent<MenuController>().Initialize(this);
+        }
 
         public void StartMatch(CharacterType player, CharacterType opponent,
             GameMode mode = GameMode.Regular, bool randomOpponent = false)
