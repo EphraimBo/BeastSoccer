@@ -29,6 +29,7 @@ namespace BeastSoccer.Core
                 return;
             }
 
+            BeastSoccer.Replay.CinematicReplay.Instance?.SealGoal(scoringSide);
             bool ultGoal = scorer != null && scorer.Ult != null && scorer.Ult.IsActive;
             CharacterType ultGoalCharacter = scorer != null ? scorer.Character : CharacterType.Generic;
             if (scoringSide == TeamSide.Home) HomeScore++; else AwayScore++;

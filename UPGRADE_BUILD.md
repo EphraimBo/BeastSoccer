@@ -1,7 +1,7 @@
 # Gameplay and progression build
 
-Branch: `feature/gameplay-progression-2026-11-04`.
-Base: `cleanup/mobile-systems-2026-11-03`, commit `4d2ebb97d641bb1785c246b4df9ea4367b92338f`.
+Branch: `feature/cinematic-replay-test-2026-11-06`.
+Base: `feature/gameplay-progression-2026-11-04`, commit `9bedc5203ffff8a84e0c63b0f92ad2cb284c9dac`.
 The release branch remains unchanged.
 
 ## Run and revert
@@ -9,7 +9,7 @@ The release branch remains unchanged.
 Open with Unity **6000.5.1f1**. Open `Assets/Scenes/MainMenu.unity` and enter Play.
 The two existing build scenes remain MainMenu then Match.
 
-Select `Assets/Resources/UpgradeSettings.asset` in the Inspector. Turn **Enable Upgrades** off to use the cleanup version's menus, AI, keeper logic and pitch presentation. The new saved balance and ownership remain on disk. Individual switches allow menus, rewards, skins, tactical AI and readable keepers to be compared separately. For consistent comparisons change gameplay switches before launching a fresh match. Disabling rewards during a match stops that match's further rewards; enabling rewards starts tracking on the next match.
+Select `Assets/Resources/UpgradeSettings.asset` in the Inspector. Turn **Enable Upgrades** off to use the cleanup version's menus, AI, keeper logic, pitch presentation and goal flow. The new saved balance and ownership remain on disk. Individual switches allow menus, rewards, skins, tactical AI, readable keepers and cinematic replays to be compared separately. For consistent comparisons change gameplay switches before launching a fresh match. Disabling rewards during a match stops that match's further rewards; enabling rewards starts tracking on the next match.
 
 For an exact source rollback, check out the cleanup branch/commit above. No new system writes to or deletes the old game's data.
 
@@ -52,6 +52,12 @@ Easy, Normal, Hard and GGs change decision intervals, lookahead, sampled routes,
 
 Both keepers have finite standing reach, a reaction delay, one committed lateral dive and recovery. The home keeper has a fixed profile; away keeper profiles follow difficulty. Saves use actual keeper position and swept ball movement, including a check before the goal authority resolves a fast shot. Legacy broad save zones and generic keeper catches are bypassed while this module is enabled. Existing Goro dive/recovery animation plays even when a dive misses. `Show Keeper Debug` displays reach/dive gizmos for selected keepers in the editor.
 
+## Cinematic goal replay
+
+`Enable Cinematic Replays` controls this experiment independently. After a regular-match goal, the game preserves the preceding 3.5 seconds of player, shadow and ball presentation and replays it from a fixed elevated camera behind and to the side of the defending goal. The defending keeper is rendered as a dark foreground silhouette. The replay uses the existing sprite frames and ball model; it does not rerun physics, AI, scoring, rewards or player input.
+
+The final 0.8 seconds play at 0.4 speed, followed by a short goal hold. A separate floating Replay/Skip overlay is shown while the gameplay HUD and live renderers are hidden. Skip, disabling the switch, pausing the app or an internal playback failure restores the original camera, field of view, follow-camera state, HUD visibility and time scale before continuing to kickoff or full time. Replay samples live presentation into a fixed-size preallocated ring buffer, so recording does not grow during a match.
+
 ## Verification
 
 `python -m pip install -r Tools/requirements.txt`
@@ -60,8 +66,8 @@ Both keepers have finite standing reach, a reaction delay, one committed lateral
 
 The source validator checks C# syntax, asset GUIDs, scene references, callback names, parent links, module bindings, catalog gates and preserved roster/artwork. It does **not** compile Unity assemblies.
 
-PlayMode tests added: `ProgressionTests` (reloads, duplicate payments, action caps, abandoned matches, both purchase gates, failed writes, corrupt-slot recovery and actual disk round trips) and `ShotMathTests` (swept contact, bounded segment distance, goal crossings and damped travel). Run these alongside the existing CleanupFlowTests and DuelFlowTests in Unity Test Runner.
+PlayMode tests added: `ProgressionTests` (reloads, duplicate payments, action caps, abandoned matches, both purchase gates, failed writes, corrupt-slot recovery and actual disk round trips), `ShotMathTests` (swept contact, bounded segment distance, goal crossings and damped travel), `ReplayBufferTests` (ring ordering, sampling, trimming and both camera sides) and `ReplayFlowTests` (goal playback, frozen game state, skip restoration, runtime toggle and original goal flow). Run these alongside the existing CleanupFlowTests and DuelFlowTests in Unity Test Runner.
 
 Unity Editor, PlayMode execution, rendered/device checks and a distributable binary were unavailable in the build environment. Before release, verify the complete flow on a phone, close/reopen after earning and buying, compare all four difficulties, shoot across keeper reach at both ends, compare base/new feature switches, and check each texture's field-line alignment against the unchanged geometry. No claims of completed device or Unity compilation testing are made.
 
-Scene UI is serialized and directly editable. `Tools/author_upgrade_scenes.py` documents the one-time authoring operation against the cleanup baseline; it intentionally rejects re-authoring an already upgraded scene.
+Scene UI is serialized and directly editable. `Tools/author_upgrade_scenes.py` documents the one-time upgrade authoring operation, while `Tools/author_replay_scene.py` documents the replay scene wiring. Both are authoring records rather than runtime dependencies.

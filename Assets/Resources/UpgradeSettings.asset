@@ -18,6 +18,7 @@ MonoBehaviour:
   enablePitchSkins: 1
   enableTacticalAI: 1
   enableReadableKeepers: 1
+  enableCinematicReplays: 1
   showKeeperDebug: 0
   unownedMapBrightness: 0.16
   matchCoins: 50

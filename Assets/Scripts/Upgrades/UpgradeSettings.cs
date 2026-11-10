@@ -15,6 +15,7 @@ namespace BeastSoccer.Upgrades
         public bool enablePitchSkins = true;
         public bool enableTacticalAI = true;
         public bool enableReadableKeepers = true;
+        public bool enableCinematicReplays = true;
         public bool showKeeperDebug;
         [Range(.05f, 1f)] public float unownedMapBrightness = .16f;
         public int matchCoins = 50, winCoins = 25, drawCoins = 10;
@@ -27,6 +28,7 @@ namespace BeastSoccer.Upgrades
         public static bool Menus => Current != null && Current.Active && Current.enableMenus;
         public static bool Rewards => Current != null && Current.Active && Current.enableRewards;
         public static bool TacticalAI => Current != null && Current.Active && Current.enableTacticalAI;
+        public static bool Replays => Current != null && Current.Active && Current.enableCinematicReplays;
         public static bool Keepers => Current != null && Current.Active && Current.enableReadableKeepers;
         public PitchDefinition Pitch(string id)
         {

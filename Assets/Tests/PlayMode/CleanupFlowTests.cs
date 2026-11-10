@@ -13,6 +13,18 @@ namespace BeastSoccer.Tests
 {
     public class CleanupFlowTests
     {
+        private bool previousUpgrades;
+        [SetUp] public void SelectBaseFeatureConfiguration()
+        {
+            var settings = BeastSoccer.Upgrades.UpgradeSettings.Current;
+            previousUpgrades = settings.enableUpgrades;
+            settings.enableUpgrades = false;
+        }
+        [TearDown] public void RestoreFeatureConfiguration()
+        {
+            BeastSoccer.Upgrades.UpgradeSettings.Current.enableUpgrades = previousUpgrades;
+        }
+
         [UnityTest]
         public IEnumerator ChangePlayersOpensSelectionAndConsumesRequest()
         {

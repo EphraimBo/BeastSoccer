@@ -14,6 +14,18 @@ namespace BeastSoccer.Tests
 {
     public class DuelFlowTests
     {
+        private bool previousUpgrades;
+        [SetUp] public void SelectBaseFeatureConfiguration()
+        {
+            var settings = BeastSoccer.Upgrades.UpgradeSettings.Current;
+            previousUpgrades = settings.enableUpgrades;
+            settings.enableUpgrades = false;
+        }
+        [TearDown] public void RestoreFeatureConfiguration()
+        {
+            BeastSoccer.Upgrades.UpgradeSettings.Current.enableUpgrades = previousUpgrades;
+        }
+
         [TestCase(4f/3f, 0f, .025f)]
         [TestCase(16f/9f, 0f, 0f)]
         [TestCase(19.5f/9f, .05f, .04f)]

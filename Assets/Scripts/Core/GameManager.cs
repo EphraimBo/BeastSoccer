@@ -217,8 +217,38 @@ namespace BeastSoccer.Core
             TeamManager.Instance?.ClearTransientPlayerState();
             TeamManager.Instance?.StopAllPlayers();
             SetPhaseInternal(MatchPhase.GoalScored);
-            if (IsGoldenGoal) StartPhaseRoutine(EndAfterGoldenGoal(GameConfig.Instance.postGoalDelay));
+            if (BeastSoccer.Replay.CinematicReplay.Instance != null && BeastSoccer.Replay.CinematicReplay.Instance.HasGoal)
+                StartPhaseRoutine(ReplayAfterGoal());
+            else if (IsGoldenGoal) StartPhaseRoutine(EndAfterGoldenGoal(GameConfig.Instance.postGoalDelay));
             else StartPhaseRoutine(RestartAfterEvent(GameConfig.Instance.postGoalDelay));
+        }
+
+        private IEnumerator ReplayAfterGoal()
+        {
+            var replay = BeastSoccer.Replay.CinematicReplay.Instance;
+            yield return new WaitForSecondsRealtime(replay != null ? Mathf.Max(0f, replay.goalAnnouncementSeconds) : 0f);
+            while (Phase == MatchPhase.Paused) yield return null;
+            if (Phase != MatchPhase.GoalScored) yield break;
+            if (replay != null)
+            {
+                // A presentation failure must never strand the live match at GoalScored.
+                var playback = replay.Play();
+                try
+                {
+                    while (true)
+                    {
+                        bool more; object wait = null;
+                        try { more = playback.MoveNext(); if (more) wait = playback.Current; }
+                        catch (System.Exception ex) { Debug.LogException(ex); break; }
+                        if (!more) break;
+                        yield return wait;
+                    }
+                }
+                finally { (playback as System.IDisposable)?.Dispose(); }
+            }
+            if (Phase != MatchPhase.GoalScored) yield break;
+            if (IsGoldenGoal) EndMatch();
+            else yield return RestartAfterEvent(0f);
         }
 
         private IEnumerator EndAfterGoldenGoal(float delay)
@@ -299,6 +329,8 @@ namespace BeastSoccer.Core
 
         public void PlayUltGoalMoment()
         {
+            // Replay owns its own slow-motion clock. Avoid an old coroutine changing its pause state.
+            if (BeastSoccer.Replay.CinematicReplay.Instance != null && BeastSoccer.Replay.CinematicReplay.Instance.HasGoal) return;
             StartCoroutine(UltGoalSlowMoRoutine());
         }
 
@@ -339,6 +371,7 @@ namespace BeastSoccer.Core
 
         public void PauseMatch()
         {
+            if (BeastSoccer.Replay.CinematicReplay.Instance != null && BeastSoccer.Replay.CinematicReplay.Instance.IsPlaying) return;
             if (Phase == MatchPhase.Paused || Phase == MatchPhase.MatchOver || Phase == MatchPhase.HalfTime) return;
             phaseBeforePause = Phase;
             Time.timeScale = 0f;
